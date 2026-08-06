@@ -1,0 +1,22 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.9
+python-dotenv>=1.0
+
+psycopg[binary]>=3.2        # Postgres driver — binary wheel, no native compile needed
+httpx>=0.27                  # calls wger and USDA (plain REST, no SDK needed for these)
+
+# Auth: Supabase now defaults new projects to asymmetric (ES256) JWT signing
+# keys, verified via a JWKS endpoint instead of a shared HS256 secret.
+# pyjwt[crypto] pulls in `cryptography`, which PyJWT needs to expose
+# jwt.algorithms.ECAlgorithm at all — without it, ES256 verification fails
+# with "module 'jwt.algorithms' has no attribute 'ECAlgorithm'".
+pyjwt[crypto]>=2.10
+
+# AI orchestration — LangChain for the LLM calls, LangGraph for the actual
+# workout/diet plan generation flow (candidate lookup -> LLM selection ->
+# validation, as explicit graph nodes).
+langchain>=0.3
+langchain-groq>=0.2
+langchain-google-genai>=2.0
+langgraph>=0.2

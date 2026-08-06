@@ -1,0 +1,101 @@
+# ==========================
+# Project files
+# ==========================
+DESIGN.md
+RUNNING.md
+
+# ==========================
+# Frontend (React + Vite)
+# ==========================
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+frontend/.vite/
+
+# ==========================
+# Backend (Python)
+# ==========================
+
+# Virtual environments
+backend/.venv/
+backend/venv/
+backend/env/
+backend/ENV/
+
+# Python cache
+backend/__pycache__/
+backend/**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Compiled Python files
+*.so
+
+# Packaging
+backend/build/
+backend/dist/
+backend/*.egg-info/
+*.egg
+.eggs/
+
+# Environment files
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# ==========================
+# Python Testing
+# ==========================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ==========================
+# Jupyter
+# ==========================
+.ipynb_checkpoints/
+
+# ==========================
+# Logs
+# ==========================
+*.log
+logs/
+
+# ==========================
+# Supabase
+# ==========================
+supabase/.temp/
+supabase/.branches/
+
+# ==========================
+# IDE
+# ==========================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ==========================
+# OS
+# ==========================
+.DS_Store
+Thumbs.db
+
+# ==========================
+# Temporary files
+# ==========================
+*.tmp
+*.temp
+*.bak
+*.backup
+
+AGENTS.md
+opencode.json

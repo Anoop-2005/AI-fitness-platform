@@ -1,0 +1,652 @@
+/* ===== Layout Utilities ===== */
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-wrap {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== Page Widths ===== */
+.page-narrow {
+  max-width: 540px;
+}
+
+.page-medium {
+  max-width: 640px;
+}
+
+.page-wide {
+  max-width: 900px;
+}
+
+/* ===== Text Utilities ===== */
+.text-inherit {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.text-capitalize {
+  text-transform: capitalize;
+}
+
+.text-white {
+  color: #ffffff;
+}
+
+.text-dim {
+  color: var(--text-dim);
+}
+
+.text-slate {
+  color: #94a3b8;
+}
+
+.text-slate-light {
+  color: #e2e8f0;
+}
+
+.text-dark-solid {
+  color: #121314ff;
+}
+
+.text-accent {
+  color: var(--accent, #3b82f6);
+}
+
+.text-small {
+  font-size: 0.85rem;
+}
+
+.text-tiny {
+  font-size: 0.80rem;
+}
+
+.text-mini {
+  font-size: 0.75rem;
+}
+
+.text-0-78 {
+  font-size: 0.78rem;
+}
+
+.text-0-9 {
+  font-size: 0.9rem;
+}
+
+.text-1 {
+  font-size: 1rem;
+}
+
+.text-1-3 {
+  font-size: 1.3rem;
+}
+
+.text-1-5 {
+  font-size: 1.5rem;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.fw-500 {
+  font-weight: 500;
+}
+
+.fw-600 {
+  font-weight: 600;
+}
+
+.no-underline {
+  text-decoration: none;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* ===== Spacing Utilities ===== */
+.mt-4 {
+  margin-top: 4px;
+}
+
+.mt-12 {
+  margin-top: 12px;
+}
+
+.mt-16 {
+  margin-top: 16px;
+}
+
+.mt-24 {
+  margin-top: 24px;
+}
+
+.mt-32 {
+  margin-top: 32px;
+}
+
+.mb-12 {
+  margin-bottom: 12px;
+}
+
+.mb-16 {
+  margin-bottom: 16px;
+}
+
+.mb-24 {
+  margin-bottom: 24px;
+}
+
+/* ===== Width Utilities ===== */
+.w-100 {
+  width: 100%;
+}
+
+/* ===== Cursor Utilities ===== */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+
+/* ===== Clickable Table Row ===== */
+.clickable-row {
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+/* ===== Button Utilities ===== */
+.btn-full {
+  width: 100%;
+}
+
+.btn-small {
+  font-size: 0.85rem;
+  padding: 8px 16px;
+}
+
+.btn-transparent {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.btn-youtube {
+  display: inline-block;
+  text-decoration: none;
+  background: #ef4444;
+  color: #fff;
+}
+
+/* ===== Modal Components ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modal-card {
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  background-color: #1e293b;
+  color: #ffffff;
+  border: 1px solid #334155;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.modal-title {
+  color: #ffffff;
+  margin: 0;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.modal-section {
+  margin: 16px 0;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.modal-section-title {
+  margin-bottom: 8px;
+  color: #ffffff;
+}
+
+.modal-section-text {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+
+.modal-youtube-btn {
+  display: inline-block;
+  text-decoration: none;
+  background: #ef4444;
+  color: #fff;
+}
+
+.modal-instructions {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #e2e8f0;
+  max-height: 150px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.modal-recipe {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.modal-footer {
+  margin-top: 24px;
+  text-align: right;
+}
+
+/* ===== Image Components ===== */
+.exercise-image-container {
+  margin: 16px 0;
+  text-align: center;
+  background: #0f172a;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.exercise-image {
+  max-width: 100%;
+  max-height: 240px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.no-image-msg {
+  padding: 20px;
+  text-align: center;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+/* ===== Macro Grid ===== */
+.macro-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin: 16px 0;
+  text-align: center;
+  background: #0f172a;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.macro-label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.macro-value {
+  font-weight: bold;
+  color: #fff;
+}
+
+/* ===== Step Indicator ===== */
+.step-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.step-item {
+  flex: 1;
+  padding: 6px 8px;
+  text-align: center;
+  font-size: 0.8rem;
+  border-radius: 4px;
+}
+
+.step-item-active {
+  background: var(--accent, #3b82f6);
+  color: #fff;
+  font-weight: 600;
+}
+
+.step-item-inactive {
+  background: var(--card-bg, #1e293b);
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+/* ===== Equipment Buttons ===== */
+.equipment-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.equipment-btn {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--line, #334155);
+  padding: 6px 12px;
+  font-size: 0.78rem;
+}
+
+.equipment-btn-selected {
+  background: var(--accent, #3b82f6);
+  color: #fff;
+  border: 1px solid var(--line, #334155);
+  padding: 6px 12px;
+  font-size: 0.78rem;
+}
+
+/* ===== Streak Banner ===== */
+.streak-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  background: var(--card-bg, #1e293b);
+  padding: 16px 24px;
+}
+
+.streak-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--accent, #3b82f6);
+  margin-top: 4px;
+}
+
+/* ===== Chart Components ===== */
+.chart-container {
+  height: 220px;
+}
+
+.chart-container-lg {
+  height: 240px;
+}
+
+.chart-container-sm {
+  height: 200px;
+}
+
+.chart-title {
+  margin-bottom: 12px;
+  font-size: 1rem;
+}
+
+/* ===== Wizard Navigation ===== */
+.wizard-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+.wizard-back {
+  cursor: not-allowed;
+}
+
+.wizard-back-enabled {
+  cursor: pointer;
+}
+
+/* ===== Card Grid Utilities ===== */
+.grid-auto-180 {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.grid-auto-210 {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.grid-auto-140 {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.grid-split {
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.card-no-margin {
+  margin: 0;
+}
+
+.card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ===== Stat Label Spacing ===== */
+.stat-margin {
+  margin-top: 24px;
+}
+
+.stat-margin-lg {
+  margin-top: 32px;
+}
+
+/* ===== Form Field Spacing ===== */
+.field-margin {
+  margin-bottom: 12px;
+}
+
+.field-margin-sm {
+  margin-top: 12px;
+}
+
+.field-margin-xs {
+  margin-top: 8px;
+}
+
+/* ===== Checkbox Row ===== */
+.checkbox-margin {
+  margin: 12px 0;
+}
+
+/* ===== Auth Link Text ===== */
+.auth-link-text {
+  margin-top: 16px;
+  font-size: 0.85rem;
+}
+
+/* ===== Stat Value Accent ===== */
+.stat-value-accent {
+  color: var(--accent, #3b82f6);
+}
+
+/* ===== Stat Value Large ===== */
+.stat-value-large {
+  font-size: 1.3rem;
+}
+
+/* ===== Stat Value Capitalize ===== */
+.stat-value-capitalize {
+  font-size: 1.3rem;
+  text-transform: capitalize;
+}
+
+/* ===== Timeline Text ===== */
+.timeline-text {
+  margin: 0;
+}
+
+/* ===== Error Banner Margin ===== */
+.error-banner-margin {
+  margin-top: 12px;
+}
+
+/* ===== Stat Label Margin ===== */
+.stat-label-margin {
+  margin-bottom: 8px;
+}
+
+/* ===== Stat Label Small Margin ===== */
+.stat-label-margin-sm {
+  margin-top: 12px;
+}
+
+/* ===== Info Text Small ===== */
+.info-text-small {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+
+/* ===== Health Assessment Title ===== */
+.health-title {
+  margin-bottom: 4px;
+}
+
+/* ===== Fitness Title ===== */
+.fitness-title {
+  margin-bottom: 16px;
+}
+
+/* ===== Diet Title ===== */
+.diet-title {
+  margin-bottom: 16px;
+}
+
+/* ===== Personal Info Title ===== */
+.personal-title {
+  margin-bottom: 16px;
+}
+
+/* ===== Instructions Section ===== */
+.instructions-section {
+  margin-top: 16px;
+}
+
+/* ===== Instructions Title ===== */
+.instructions-title {
+  margin-bottom: 6px;
+  color: #ffffff;
+}
+
+/* ===== Recipe Section ===== */
+.recipe-section {
+  margin: 16px 0;
+}
+
+/* ===== Recipe Title ===== */
+.recipe-title {
+  margin-bottom: 6px;
+  color: #ffffff;
+}
+
+/* ===== How To Section ===== */
+.how-to-section {
+  margin: 16px 0;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+/* ===== How To Title ===== */
+.how-to-title {
+  margin-bottom: 8px;
+  color: #ffffff;
+}
+
+/* ===== How To Text ===== */
+.how-to-text {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+
+/* ===== Prescription Text ===== */
+.prescription-text {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 16px;
+}
+
+/* ===== Serving Text ===== */
+.serving-text {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 16px;
+}
+
+/* ===== Page Description ===== */
+.page-description {
+  color: var(--text-dim);
+  margin-bottom: 24px;
+}
+
+/* ===== Page Subtitle ===== */
+.page-subtitle {
+  color: var(--text-dim);
+  margin-bottom: 16px;
+}
+
+/* ===== Stat Summary Text ===== */
+.stat-summary-text {
+  margin-top: 12px;
+  color: #121314ff;
+}
+
+/* ===== Review Summary ===== */
+.review-summary {
+  margin-top: 12px;
+  color: #121314ff;
+}
