@@ -21,11 +21,12 @@ secret — if you set SUPABASE_JWT_SECRET, we fall back to that when a token
 isn't verifiable via JWKS (e.g. the JWKS endpoint returns no keys at all,
 which is what happens on a legacy-only project).
 """
-from fastapi import Header, HTTPException
+from fastapi import Header, HTTPException, Depends
 import jwt
 from jwt import PyJWKClient
 
 from config import SUPABASE_URL, SUPABASE_JWT_SECRET
+from db import get_db
 
 _jwks_client = PyJWKClient(f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json", cache_keys=True) if SUPABASE_URL else None
 
@@ -39,7 +40,7 @@ def _verify_via_legacy_secret(token: str) -> dict:
     return jwt.decode(token, SUPABASE_JWT_SECRET, algorithms=["HS256"], audience="authenticated")
 
 
-def get_current_user(authorization: str | None = Header(default=None)) -> dict:
+def get_current_user(authorization: str | None = Header(default=None), db = Depends(get_db)) -> dict:
     """FastAPI dependency: add `user: dict = Depends(get_current_user)` to any protected route."""
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing auth token")
@@ -64,4 +65,19 @@ def get_current_user(authorization: str | None = Header(default=None)) -> dict:
             raise HTTPException(status_code=401, detail="Token expired, please log in again")
         raise HTTPException(status_code=401, detail="Invalid auth token")
 
-    return {"id": payload["sub"], "email": payload.get("email")}
+    # Fetch user role from profiles table
+    user_id = payload["sub"]
+    role = None
+    try:
+        #from db import get_db
+        #db = next(get_db())
+        with db.cursor() as cur:
+            cur.execute("SELECT role FROM profiles WHERE user_id = %s", (user_id,))
+            row = cur.fetchone()
+            if row:
+                role = row["role"] if isinstance(row, dict) else row[0]
+    except Exception as e :
+        #pass  # If profile doesn't exist yet, role stays None
+        print("DEBUG - ROLE FETCH ERROR:", e)
+
+    return {"id": user_id, "email": payload.get("email"), "role": role}

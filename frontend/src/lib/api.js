@@ -37,4 +37,25 @@ export const api = {
   listPhotos: (viewType) => request(`/api/photos/list${viewType ? `?view_type=${viewType}` : ""}`),
   getLatestPhotos: () => request("/api/photos/latest"),
   deletePhoto: (photoId) => request(`/api/photos/${photoId}`, { method: "DELETE" }),
+
+  // Admin API
+  adminListTrainers: () => request("/api/admin/trainers"),
+  adminListClients: () => request("/api/admin/clients"),
+  adminListUsers: (role) => request(`/api/admin/users${role ? `?role=${role}` : ""}`),
+  adminStats: () => request("/api/admin/stats"),
+  adminDeleteUser: (userId) => request(`/api/admin/users/${userId}`, { method: "DELETE" }),
+
+  // Trainer API
+  trainerGetClients: () => request("/api/trainer/clients"),
+  trainerGetClientProfile: (clientId) => request(`/api/trainer/clients/${clientId}/profile`),
+  trainerGetClientWorkout: (clientId) => request(`/api/trainer/clients/${clientId}/workout`),
+  trainerGetClientDiet: (clientId) => request(`/api/trainer/clients/${clientId}/diet`),
+  trainerGetClientProgress: (clientId, days) => request(`/api/trainer/clients/${clientId}/progress?days=${days || 30}`),
+  trainerGetClientAnalysis: (clientId) => request(`/api/trainer/clients/${clientId}/analysis`),
+  trainerSendMessage: (clientId, message) => request("/api/trainer/messages", { method: "POST", body: { client_id: clientId, message } }),
+  trainerGetMessages: (clientId) => request(`/api/trainer/messages/${clientId}`),
+  getMyTrainer: () => request("/api/trainer/my-trainer"),
+  getMyMessages: () => request("/api/trainer/my-messages"),
+  clientSendMessage: (message) => request("/api/trainer/my-messages", {method: "POST",body: { message },}),
+  trainerGetMessages: (clientId) => request(`/api/trainer/messages/${clientId}`),
 };

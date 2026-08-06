@@ -12,6 +12,8 @@ import Habits from "./pages/Habits";
 import Progress from "./pages/Progress";
 import Coach from "./pages/Coach";
 import ProgressPhotos from "./pages/ProgressPhotos";
+import AdminPanel from "./pages/AdminPanel";
+import TrainerDashboard from "./pages/TrainerDashboard";
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -36,6 +38,8 @@ export default function App() {
             <Route path="/coach" element={<Coach />} />
             <Route path="/progress" element={<Progress />} />
             <Route path="/photos" element={<ProgressPhotos />} />
+            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/trainer" element={<TrainerDashboard />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
