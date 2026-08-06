@@ -32,4 +32,9 @@ export const api = {
   getHabits: (days = 30) => request(`/api/habits?days=${days}`),
   resetOnboarding: () => request("/api/onboarding", { method: "DELETE" }),
   getStreak: () => request("/api/habits/streak"),
+  coachChat: (message) => request("/api/coach/chat", { method: "POST", body: { message } }),
+  uploadPhoto: (viewType, imageData) => request("/api/photos/upload", { method: "POST", body: { view_type: viewType, image_data: imageData },}),
+  listPhotos: (viewType) => request(`/api/photos/list${viewType ? `?view_type=${viewType}` : ""}`),
+  getLatestPhotos: () => request("/api/photos/latest"),
+  deletePhoto: (photoId) => request(`/api/photos/${photoId}`, { method: "DELETE" }),
 };

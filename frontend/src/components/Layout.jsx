@@ -20,6 +20,8 @@ export default function Layout() {
           <NavLink to="/diet" className={({ isActive }) => (isActive ? "active" : "")}>Diet</NavLink>
           <NavLink to="/habits" className={({ isActive }) => (isActive ? "active" : "")}>Log</NavLink>
           <NavLink to="/progress" className={({ isActive }) => (isActive ? "active" : "")}>Progress</NavLink>
+          <NavLink to="/coach" className={({ isActive }) => (isActive ? "active" : "")}>Coach</NavLink>
+          <NavLink to="/photos" className={({ isActive }) => (isActive ? "active" : "")}>Photos</NavLink>
         </nav>
         <button className="btn btn-secondary" onClick={handleLogout}>Log out</button>
       </div>
