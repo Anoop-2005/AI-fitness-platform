@@ -158,5 +158,7 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+IMPLEMENTATION_SUMMARY.md
+backend/migrations/001_admin_trainer_tables.sql
 
 # End of https://mrkandreev.name/snippets/gitignore-generator/#Python

@@ -134,14 +134,55 @@ def get_profile(user=Depends(get_current_user), db=Depends(get_db)):
     return row
 
 
-@router.get("/analysis")
+'''@router.get("/analysis")
 def get_latest_analysis(user=Depends(get_current_user), db=Depends(get_db)):
+    uid = user["id"]
     with db.cursor() as cur:
         cur.execute("SELECT * FROM body_analysis WHERE user_id = %s ORDER BY id DESC LIMIT 1", (user["id"],))
         row = cur.fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="No body analysis yet")
-    return row
+    return row'''
+
+@router.get("/analysis")
+def get_latest_analysis(user=Depends(get_current_user), db=Depends(get_db)):
+    uid = user["id"]
+    with db.cursor() as cur:
+        # 1. Fetch the user's base profile and fitness goal
+        cur.execute("""
+            SELECT p.*, f.primary_goal 
+            FROM profiles p
+            LEFT JOIN fitness_prefs f ON f.user_id = p.user_id
+            WHERE p.user_id = %s
+        """, (uid,))
+        profile = cur.fetchone()
+        
+        if not profile:
+            raise HTTPException(status_status=404, detail="No onboarding profile yet")
+
+        # 2. Fetch the latest weight log from 'habit_logs' using user_id and log_date
+        cur.execute("""
+            SELECT weight_kg FROM habit_logs 
+            WHERE user_id = %s AND weight_kg IS NOT NULL
+            ORDER BY log_date DESC, id DESC LIMIT 1
+        """, (uid,))
+        weight_row = cur.fetchone()
+
+        # 3. Fallback to onboarding profile current_weight_kg if no habit log exists yet
+        active_weight = weight_row["weight_kg"] if weight_row and weight_row["weight_kg"] else profile["current_weight_kg"]
+
+        # 4. Re-calculate metrics dynamically with your deterministic math engine
+        analysis = calculators.full_body_analysis(
+            weight_kg=float(active_weight),
+            height_cm=float(profile["height_cm"]),
+            age=profile["age"],
+            gender=profile["gender"],
+            activity_level=profile["activity_level"],
+            goal=profile["primary_goal"],
+            target_weight_kg=float(profile["target_weight_kg"])
+        )
+
+        return analysis
 
 
 @router.delete("")

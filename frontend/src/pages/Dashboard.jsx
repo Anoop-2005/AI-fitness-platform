@@ -11,9 +11,32 @@ export default function Dashboard() {
   const [streak, setStreak] = useState(0);
   const navigate = useNavigate();
 
-  useEffect(() => {
+  {/*useEffect(() => {
     Promise.all([api.getProfile(), api.getAnalysis(), api.getStreak().catch(() => ({ current_streak: 0 }))])
       .then(([p, a, s]) => { setProfile(p); setAnalysis(a); setStreak(s.current_streak || 0) })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);*/}
+  useEffect(() => {
+    Promise.all([
+      api.getProfile(), 
+      api.getAnalysis().catch(() => null), 
+      api.getStreak().catch(() => ({ current_streak: 0 })),
+      api.getProgressLogs ? api.getProgressLogs().catch(() => []) : Promise.resolve([])
+    ])
+      .then(([p, a, s, logs]) => { 
+        setProfile(p); 
+        setAnalysis(a); 
+        setStreak(s.current_streak || 0);
+
+        // If you have recent logs, override current weight with the latest logged weight
+        if (logs && logs.length > 0) {
+          const latestLog = logs[0]; // Assuming newest log is first
+          if (latestLog.weight_kg) {
+            setProfile(prev => ({ ...prev, current_weight_kg: latestLog.weight_kg }));
+          }
+        }
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
@@ -43,6 +66,19 @@ export default function Dashboard() {
     );
   }
 
+  // If profile exists but the AI plan is still building in the background
+  if (!analysis) {
+    return (
+      <div className="page">
+        <div className="card" style={{ textAlign: "center", padding: "40px" }}>
+          <h2>🏗️ Building your personalized plan...</h2>
+          <p className="text-dim mb-16">Your AI coach is calculating your optimal workouts, macros, and goals. This takes just a moment.</p>
+          <button className="btn" onClick={() => window.location.reload()}>Refresh Page</button>
+        </div>
+      </div>
+    );
+  }
+
   // Derive ideal weight range from height using standard BMI healthy limits (18.5 - 24.9 kg/m²)
   const heightM = profile?.height_cm ? profile.height_cm / 100 : 1.7;
   const idealWeightMin = Math.round(18.5 * (heightM ** 2));
@@ -57,7 +93,7 @@ export default function Dashboard() {
           disabled={resetting}
           className="btn btn-small"
         >
-          {resetting ? "Resetting..." : "🔄 Retake Onboarding"}
+          {resetting ? "Resetting..." : " Retake Onboarding"}
         </button>
       </div>
 

@@ -99,3 +99,5 @@ Thumbs.db
 
 AGENTS.md
 opencode.json
+IMPLEMENTATION_SUMMARY.md
+backend/migrations/001_admin_trainer_tables.sql

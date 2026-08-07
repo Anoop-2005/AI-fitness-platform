@@ -66,10 +66,10 @@ export default function AdminPanel() {
             <div className="stat-label">Clients</div>
             <div className="stat-value">{stats.clients}</div>
           </div>
-          <div className="card">
+          {/*<div className="card">
             <div className="stat-label">Logs (30 days)</div>
             <div className="stat-value">{stats.recent_logs}</div>
-          </div>
+          </di>*/}
         </div>
       )}
 

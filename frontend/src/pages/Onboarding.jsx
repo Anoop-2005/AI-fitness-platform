@@ -310,7 +310,7 @@ export default function Onboarding() {
           </>
         )}
 
-        {/* Wizard Navigation */}
+        
         {/* Wizard Navigation */}
         <div className="wizard-nav">
           <button
@@ -327,7 +327,7 @@ export default function Onboarding() {
               Continue
             </button>
           ) : (
-            <button type="submit" className="btn" disabled={loading}>
+            <button type="submit" className={`btn ${loading ? "cursor-not-allowed" : "cursor-pointer"}`} disabled={loading}>
               {loading ? "Building your plan…" : "Generate my plan"}
             </button>
           )}
