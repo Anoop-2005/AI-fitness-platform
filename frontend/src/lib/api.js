@@ -54,8 +54,15 @@ export const api = {
   trainerGetClientAnalysis: (clientId) => request(`/api/trainer/clients/${clientId}/analysis`),
   trainerSendMessage: (clientId, message) => request("/api/trainer/messages", { method: "POST", body: { client_id: clientId, message } }),
   trainerGetMessages: (clientId) => request(`/api/trainer/messages/${clientId}`),
+  trainerGetPendingRequests: () => request("/api/trainer/requests/pending"),
+  trainerRespondRequest: (clientId, action) => request("/api/trainer/requests/action", { method: "POST", body: { client_id: clientId, action } }),
+  
   getMyTrainer: () => request("/api/trainer/my-trainer"),
   getMyMessages: () => request("/api/trainer/my-messages"),
   clientSendMessage: (message) => request("/api/trainer/my-messages", {method: "POST",body: { message },}),
-  trainerGetMessages: (clientId) => request(`/api/trainer/messages/${clientId}`),
+
+  // New Trainer Marketplace Methods
+  // New (matches your backend exactly)
+  getAvailableTrainers: () => request("/api/trainer/trainers/available"),
+  requestTrainer: (trainerId) => request("/api/trainer/trainers/request", { method: "POST", body: { trainer_id: trainerId } }),
 };

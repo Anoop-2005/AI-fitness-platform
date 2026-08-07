@@ -179,7 +179,7 @@ def send_message(
     return row
 
 
-@router.get("/messages/{client_id}")
+'''@router.get("/messages/{client_id}")
 def get_messages(
     client_id: str,
     user=Depends(require_trainer),
@@ -193,7 +193,7 @@ def get_messages(
             ORDER BY sent_at DESC
             LIMIT 50
         """, (user["id"], client_id))
-        return cur.fetchall()
+        return cur.fetchall()'''
 
 
 # 1. Get trainer info for a client
@@ -272,3 +272,97 @@ def get_messages(
             LIMIT 50
         """, (user["id"], client_id))
         return cur.fetchall()
+
+# 4. Get a list of available trainers for clients to choose from
+@router.get("/trainers/available")
+def get_available_trainers(user=Depends(get_current_user), db=Depends(get_db)):
+    """Get all available trainers for clients to select from."""
+    with db.cursor() as cur:
+        cur.execute("""
+            SELECT user_id, full_name, age, gender, activity_level 
+            FROM profiles 
+            WHERE role = 'trainer'
+            ORDER BY full_name
+        """)
+        trainers = cur.fetchall()
+    return trainers
+
+
+# 5. Client requests or selects a specific trainer
+class SelectTrainerRequest(BaseModel):
+    trainer_id: str
+
+@router.post("/trainers/request")
+def request_trainer(
+    body: SelectTrainerRequest,
+    user=Depends(get_current_user),
+    db=Depends(get_db)
+):
+    """Assign or update a trainer for the current client."""
+    client_id = user["id"]
+    trainer_id = body.trainer_id
+
+    with db.cursor() as cur:
+        # Verify the target user is actually a trainer
+        cur.execute("SELECT role FROM profiles WHERE user_id = %s", (trainer_id,))
+        trainer_profile = cur.fetchone()
+        
+        if not trainer_profile or (trainer_profile.get("role") if isinstance(trainer_profile, dict) else trainer_profile[0]) != "trainer":
+            raise HTTPException(status_code=400, detail="Invalid trainer selected")
+
+        # Safely remove any existing request/assignment for this client first, then insert new pending request
+        cur.execute("DELETE FROM trainer_clients WHERE client_id = %s", (client_id,))
+        cur.execute("""
+            INSERT INTO trainer_clients (trainer_id, client_id, status) 
+            VALUES (%s, %s, 'pending')
+        """, (trainer_id, client_id))
+        
+    return {"success": True, "message": "Trainer request sent successfully!"}
+
+# 1. Get incoming pending client requests for the logged-in trainer
+@router.get("/requests/pending")
+def get_pending_requests(user=Depends(require_trainer), db=Depends(get_db)):
+    """Get all pending client requests for this trainer."""
+    with db.cursor() as cur:
+        cur.execute("""
+            SELECT tc.client_id, p.full_name, p.age, p.gender, p.activity_level, p.primary_goal
+            FROM trainer_clients tc
+            JOIN profiles p ON p.user_id = tc.client_id
+            WHERE tc.trainer_id = %s AND tc.status = 'pending'
+            ORDER BY p.full_name
+        """, (user["id"],))
+        return cur.fetchall()
+
+
+# 2. Accept or Decline a client request
+class RequestActionPayload(BaseModel):
+    client_id: str
+    action: str  # 'accept' or 'declined'
+
+@router.post("/requests/action")
+def handle_client_request(
+    body: RequestActionPayload,
+    user=Depends(require_trainer),
+    db=Depends(get_db)
+):
+    """Trainer accepts or declines a client request."""
+    trainer_id = user["id"]
+    
+    if body.action not in ["accept", "declined"]:
+        raise HTTPException(status_code=400, detail="Invalid action. Use 'accept' or 'declined'")
+
+    with db.cursor() as cur:
+        if body.action == "accept":
+            cur.execute("""
+                UPDATE trainer_clients 
+                SET status = 'accepted' 
+                WHERE trainer_id = %s AND client_id = %s
+            """, (trainer_id, body.client_id))
+        else:
+            # If declined, delete the relationship row so the client can pick someone else
+            cur.execute("""
+                DELETE FROM trainer_clients 
+                WHERE trainer_id = %s AND client_id = %s AND status = 'pending'
+            """, (trainer_id, body.client_id))
+
+    return {"success": True, "message": f"Request {body.action}ed successfully"}

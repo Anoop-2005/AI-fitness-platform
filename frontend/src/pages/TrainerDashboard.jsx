@@ -1,15 +1,54 @@
 import React, { useState, useEffect } from "react";
 import { api } from "../lib/api";
 
-// --- Sub-component: Client Messaging View ---
-function ClientInbox({ trainer, messages, newMessage, setNewMessage, onSend, sending, currentUserId }) {
+// --- Sub-component: Client Messaging & Marketplace View ---
+function ClientInbox({ trainer, availableTrainers, onSelectTrainer, messages, newMessage, setNewMessage, onSend, sending, currentUserId }) {
+  const [selectingId, setSelectingId] = useState(null);
+
+  async function handleSelect(trainerId) {
+    setSelectingId(trainerId);
+    await onSelectTrainer(trainerId);
+    setSelectingId(null);
+  }
+
   return (
     <div className="page page-wide">
       <h2>💬 Messages with Your Trainer</h2>
 
       {!trainer ? (
-        <div className="card">
-          <p className="text-dim">No trainer has been assigned to you yet.</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          <div className="card">
+            <p className="text-dim">No trainer has been assigned to you yet. Choose a professional trainer below to get started!</p>
+          </div>
+
+          {/* Trainer Marketplace List */}
+          <div className="card">
+            <h3 className="mb-12">Available Trainers</h3>
+            {availableTrainers.length === 0 ? (
+              <p className="text-small text-dim">No trainers are currently available.</p>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 16 }}>
+                {availableTrainers.map((t) => (
+                  <div key={t.user_id} className="card" style={{ border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 12 }}>
+                    <div>
+                      <h4 style={{ marginBottom: 4 }}>{t.full_name}</h4>
+                      <p className="text-small text-dim">
+                        {t.age}y | {t.gender} | {t.activity_level || "Fitness Pro"}
+                      </p>
+                    </div>
+                    <button
+                      className="btn"
+                      style={{ width: "100%" }}
+                      disabled={selectingId === t.user_id}
+                      onClick={() => handleSelect(t.user_id)}
+                    >
+                      {selectingId === t.user_id ? "Selecting..." : "Select Trainer"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         <>
@@ -88,11 +127,13 @@ export default function TrainerDashboard() {
   const [dataLoading, setDataLoading] = useState(false);
   const [trainerMessage, setTrainerMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState([]);
 
   // Client States
   const [trainer, setTrainer] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const [availableTrainers, setAvailableTrainers] = useState([]);
 
   useEffect(() => {
     detectRole();
@@ -119,14 +160,36 @@ export default function TrainerDashboard() {
   }
 
   // --- Trainer Logic ---
-  async function loadTrainerDashboard() {
+  {/*(async function loadTrainerDashboard() {
     try {
       const data = await api.trainerGetClients();
       setClients(data);
     } catch (err) {
       setError(err.message);
     }
+  }*/}
+  async function loadTrainerDashboard() {
+  try {
+    const [clientsData, requestsData] = await Promise.all([
+      api.trainerGetClients(),
+      api.trainerGetPendingRequests().catch(() => [])
+    ]);
+    setClients(clientsData);
+    setPendingRequests(requestsData);
+  } catch (err) {
+    setError(err.message);
   }
+ }
+ 
+ async function handleRequestAction(clientId, action) {
+  try {
+    await api.trainerRespondRequest(clientId, action);
+    alert(`Request ${action}ed!`);
+    await loadTrainerDashboard(); // Refresh lists
+  } catch (err) {
+    alert("Failed to process request: " + err.message);
+  }
+}
 
   async function selectClient(client) {
     setSelectedClient(client);
@@ -166,7 +229,7 @@ export default function TrainerDashboard() {
   }
 
   // --- Client Logic ---
-  async function loadClientInbox() {
+  {/*async function loadClientInbox() {
     try {
       const [trainerData, msgs] = await Promise.all([
         api.getMyTrainer().catch(() => null),
@@ -176,6 +239,31 @@ export default function TrainerDashboard() {
       setMessages(msgs);
     } catch (err) {
       setError(err.message);
+    }
+  }*/}
+  // --- Client Logic ---
+  async function loadClientInbox() {
+    try {
+      const [trainerData, msgs, trainersList] = await Promise.all([
+        api.getMyTrainer().catch(() => null),
+        api.getMyMessages().catch(() => []),
+        api.getAvailableTrainers().catch(() => []),
+      ]);
+      setTrainer(trainerData);
+      setMessages(msgs);
+      setAvailableTrainers(trainersList);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleSelectTrainer(trainerId) {
+    try {
+      await api.requestTrainer(trainerId);
+      alert("Trainer selected successfully!");
+      await loadClientInbox(); // Reload inbox/trainer status
+    } catch (err) {
+      alert("Failed to select trainer: " + err.message);
     }
   }
 
@@ -208,6 +296,8 @@ export default function TrainerDashboard() {
     return (
       <ClientInbox
         trainer={trainer}
+        availableTrainers={availableTrainers}
+        onSelectTrainer={handleSelectTrainer}
         messages={messages}
         newMessage={newMessage}
         setNewMessage={setNewMessage}
@@ -222,6 +312,44 @@ export default function TrainerDashboard() {
   return (
     <div className="page page-wide">
       <h2>Trainer Dashboard</h2>
+
+      {/* Pending Client Requests Section */}
+      {pendingRequests.length > 0 && (
+        <div className="card" style={{ marginTop: 16, marginBottom: 24, border: "1px solid var(--primary)" }}>
+          <h3 className="mb-12">🔔 Pending Client Requests ({pendingRequests.length})</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+            {pendingRequests.map((req) => (
+              <div key={req.client_id} className="card" style={{ background: "var(--surface)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 12 }}>
+                <div>
+                  <h4 style={{ marginBottom: 4 }}>{req.full_name}</h4>
+                  <p className="text-small text-dim">
+                    {req.age}y | {req.gender} | Goal: {req.primary_goal?.replace("_", " ") || "General"}
+                  </p>
+                  <p className="text-small text-dim" style={{ marginTop: 4 }}>
+                    Activity: {req.activity_level || "Not specified"}
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button 
+                    className="btn" 
+                    style={{ flex: 1, background: "green" }}
+                    onClick={() => handleRequestAction(req.client_id, "accept")}
+                  >
+                    Accept
+                  </button>
+                  <button 
+                    className="btn btn-secondary" 
+                    style={{ flex: 1, color: "var(--danger)", borderColor: "var(--danger)" }}
+                    onClick={() => handleRequestAction(req.client_id, "declined")}
+                  >
+                    Decline
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: 24, marginTop: 16 }}>
         {/* Client List Sidebar */}
