@@ -1,72 +1,16 @@
 # backend/services/coach_service.py
 from services.llm_client import chat
-from routers.plans import _get_profile, _get_latest_analysis
-
-
-def _get_recent_habits(db, user_id: str, days: int = 14) -> list:
-    """Fetch recent habit logs for context."""
-    from datetime import date, timedelta
-    cutoff = date.today() - timedelta(days=days)
-    with db.cursor() as cur:
-        cur.execute(
-            "SELECT * FROM habit_logs WHERE user_id = %s AND log_date >= %s ORDER BY log_date DESC LIMIT 14",
-            (user_id, cutoff)
-        )
-        return cur.fetchall()
-
-
-def _get_workout_plan_summary(db, user_id: str) -> str:
-    """Get current workout plan summary."""
-    with db.cursor() as cur:
-        cur.execute("SELECT id FROM workout_plans WHERE user_id = %s ORDER BY id DESC LIMIT 1", (user_id,))
-        row = cur.fetchone()
-        if not row:
-            return "No workout plan generated yet."
-        cur.execute("""
-            SELECT wpe.*, ec.name, ec.muscle_group
-            FROM workout_plan_exercises wpe
-            JOIN exercises_cache ec ON ec.wger_id = wpe.wger_id
-            WHERE wpe.workout_plan_id = %s
-            ORDER BY wpe.day_number, wpe.order_in_day
-        """, (row["id"],))
-        exercises = cur.fetchall()
-    if not exercises:
-        return "Workout plan exists but has no exercises."
-    days = {}
-    for ex in exercises:
-        days.setdefault(ex["day_number"], []).append(ex["name"])
-    return "\n".join(f"Day {d}: {', '.join(names)}" for d, names in sorted(days.items()))
-
-
-def _get_diet_plan_summary(db, user_id: str) -> str:
-    """Get current diet plan summary."""
-    with db.cursor() as cur:
-        cur.execute("SELECT id FROM diet_plans WHERE user_id = %s ORDER BY id DESC LIMIT 1", (user_id,))
-        row = cur.fetchone()
-        if not row:
-            return "No diet plan generated yet."
-        cur.execute("""
-            SELECT dpm.*, fc.name
-            FROM diet_plan_meals dpm
-            JOIN foods_cache fc ON fc.fdc_id = dpm.fdc_id
-            WHERE dpm.diet_plan_id = %s
-            ORDER BY dpm.order_in_day
-        """, (row["id"],))
-        meals = cur.fetchall()
-    if not meals:
-        return "Diet plan exists but has no meals."
-    return "\n".join(f"{m['meal_slot'].replace('_', ' ').title()}: {m['name']}" for m in meals)
+from services.profile_helpers import get_profile, get_latest_analysis, get_recent_habits, get_workout_plan_summary, get_diet_plan_summary
 
 
 def get_coach_response(db, user_id: str, user_message: str) -> str:
     """Generate AI coach response with full user context."""
-    profile = _get_profile(db, user_id)
-    analysis = _get_latest_analysis(db, user_id)
-    habits = _get_recent_habits(db, user_id)
-    workout_summary = _get_workout_plan_summary(db, user_id)
-    diet_summary = _get_diet_plan_summary(db, user_id)
+    profile = get_profile(db, user_id)
+    analysis = get_latest_analysis(db, user_id)
+    habits = get_recent_habits(db, user_id)
+    workout_summary = get_workout_plan_summary(db, user_id)
+    diet_summary = get_diet_plan_summary(db, user_id)
 
-    # Build context for the LLM
     context = f"""You are an AI personal fitness coach named 'Iron Coach'. You are supportive, knowledgeable, and motivating. You help users with:
 - Answering fitness and nutrition questions
 - Correcting workout techniques and form

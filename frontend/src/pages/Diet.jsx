@@ -7,6 +7,8 @@ export default function Diet() {
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState(null); // Modal detail state
+  const [foodEnrichment, setFoodEnrichment] = useState(null);
+  const [foodEnriching, setFoodEnriching] = useState(false);
 
   function load() {
     setLoading(true);
@@ -23,6 +25,20 @@ export default function Diet() {
       setError(e.message);
     } finally {
       setRegenerating(false);
+    }
+  }
+
+  async function selectMeal(meal) {
+    setSelectedMeal(meal);
+    setFoodEnrichment(null);
+    setFoodEnriching(true);
+    try {
+      const data = await api.enrichFood(meal.fdc_id);
+      setFoodEnrichment(data);
+    } catch (err) {
+      setFoodEnrichment(null);
+    } finally {
+      setFoodEnriching(false);
     }
   }
 
@@ -57,7 +73,7 @@ export default function Diet() {
               {plan.meals.map((m) => (
                 <tr
                   key={m.id}
-                  onClick={() => setSelectedMeal(m)}
+                  onClick={() => selectMeal(m)}
                   className="clickable-row"
                   title="Click to view full nutritional breakdown & recipe"
                 >
@@ -120,22 +136,32 @@ export default function Diet() {
 
             {/* Serving Size & Cooking Time */}
             <p className="serving-text">
-              <strong>Portion Size:</strong> {selectedMeal.serving_size || "1 serving"} | <strong>Cooking Time:</strong> ~15 mins
+              <strong>Portion Size:</strong> {selectedMeal.serving_size || "1 serving"} | <strong>Cooking Time:</strong> ~{foodEnrichment?.cooking_time_minutes || 15} mins
             </p>
 
             {/* Recipe Instructions */}
             <div className="recipe-section">
               <h4 className="recipe-title">Preparation Recipe</h4>
               <p className="modal-recipe">
-                Prepare ingredients to match the target portion size. Cook using minimal healthy fats (olive oil or cooking spray) and season with natural herbs and spices according to your personal dietary preference.
+                {foodEnriching ? "Loading recipe..." : (foodEnrichment?.recipe || `Prepare ingredients to match the target portion size. Cook using minimal healthy fats (olive oil or cooking spray) and season with natural herbs and spices.`)}
               </p>
+              {foodEnrichment?.ingredients && (
+                <p className="text-small text-dim mt-12">
+                  <strong>Ingredients:</strong> {foodEnrichment.ingredients}
+                </p>
+              )}
+              {foodEnrichment?.cooking_time_minutes && (
+                <p className="text-small text-dim mt-4">
+                  <strong>Cooking time:</strong> ~{foodEnrichment.cooking_time_minutes} mins
+                </p>
+              )}
             </div>
 
             {/* Healthier Alternatives */}
             <div className="recipe-section">
               <h4 className="recipe-title">Healthier Alternatives / Swaps</h4>
               <p className="modal-recipe">
-                Can substitute with lean plant-based proteins, whole-grain alternatives, or lower-calorie variations depending on your daily caloric target.
+                {foodEnrichment?.healthier_alternatives || "Can substitute with lean plant-based proteins, whole-grain alternatives, or lower-calorie variations depending on your daily caloric target."}
               </p>
             </div>
 

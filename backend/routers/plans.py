@@ -262,7 +262,7 @@ def _get_profile(db, user_id):
 
     # Convert row to dictionary and safely force integer parsing for split/meal preferences
     profile = dict(row)
-    
+
     try:
         profile["days_per_week"] = int(profile.get("days_per_week") or 4)
     except (TypeError, ValueError):
@@ -285,6 +285,53 @@ def _get_latest_review(db, user_id):
     with db.cursor() as cur:
         cur.execute("SELECT * FROM weekly_reviews WHERE user_id = %s ORDER BY id DESC LIMIT 1", (user_id,))
         return cur.fetchone()
+
+
+def _auto_regenerate_plans(db, user_id, review_id, current_week_start):
+    """Auto-regenerate workout and diet plans for next week based on review."""
+    from agents.workout_planner import generate_workout_plan
+    from agents.diet_planner import generate_diet_plan
+
+    profile = _get_profile(db, user_id)
+    if not profile:
+        return
+
+    analysis = _get_latest_analysis(db, user_id)
+    review = {"id": review_id, "plateau_detected": False, "stats": {}}
+    next_week_start = current_week_start + timedelta(days=7)
+
+    with db.cursor() as cur:
+        # Regenerate workout plan
+        try:
+            workout_rows = generate_workout_plan(db, profile, review)
+            if workout_rows:
+                cur.execute("""
+                    INSERT INTO workout_plans (user_id, week_start, based_on_review_id) VALUES (%s,%s,%s) RETURNING id
+                """, (user_id, next_week_start, review_id))
+                plan_id = cur.fetchone()["id"]
+                for r in workout_rows:
+                    cur.execute("""
+                        INSERT INTO workout_plan_exercises (workout_plan_id, wger_id, day_number, sets, reps, rest_seconds, order_in_day)
+                        VALUES (%s,%s,%s,%s,%s,%s,%s)
+                    """, (plan_id, r["wger_id"], r["day_number"], r["sets"], r["reps"], r["rest_seconds"], r["order_in_day"]))
+        except Exception:
+            pass
+
+        # Regenerate diet plan
+        try:
+            diet_rows = generate_diet_plan(db, profile, analysis, review)
+            if diet_rows:
+                cur.execute("""
+                    INSERT INTO diet_plans (user_id, week_start, based_on_review_id) VALUES (%s,%s,%s) RETURNING id
+                """, (user_id, next_week_start, review_id))
+                diet_plan_id = cur.fetchone()["id"]
+                for r in diet_rows:
+                    cur.execute("""
+                        INSERT INTO diet_plan_meals (diet_plan_id, fdc_id, day_number, meal_slot, order_in_day)
+                        VALUES (%s,%s,%s,%s,%s)
+                    """, (diet_plan_id, r["fdc_id"], r["day_number"], r["meal_slot"], r["order_in_day"]))
+        except Exception:
+            pass
 
 
 @router.get("/review/weekly")
@@ -311,21 +358,28 @@ def weekly_review(user=Depends(get_current_user), db=Depends(get_db)):
         """, (uid, week_start, today))
         logs = cur.fetchall()
 
-    review = generate_weekly_review(logs)
+    # Get target calories from latest body analysis
+    analysis = _get_latest_analysis(db, uid)
+    target_calories = analysis.get("target_calories", 0) if analysis else 0
+
+    review = generate_weekly_review(logs, target_calories=target_calories)
 
     with db.cursor() as cur:
         cur.execute("""
             INSERT INTO weekly_reviews (user_id, week_start, stats, plateau_detected, summary)
-            VALUES (%s, %s, %s, %s, %s) 
+            VALUES (%s, %s, %s, %s, %s)
             RETURNING id, user_id, week_start, stats, plateau_detected, summary, created_at
         """, (
-            uid, 
-            week_start, 
-            json.dumps(review["stats"]), 
-            review["plateau_detected"], 
+            uid,
+            week_start,
+            json.dumps(review["stats"]),
+            review["plateau_detected"],
             review["summary"]
         ))
         saved_row = cur.fetchone()
+
+    # Auto-regenerate plans for next week based on this review
+    _auto_regenerate_plans(db, uid, saved_row["id"], week_start)
 
     return saved_row
 

@@ -6,6 +6,9 @@ export default function AdminPanel() {
   const [trainers, setTrainers] = useState([]);
   const [clients, setClients] = useState([]);
   const [stats, setStats] = useState(null);
+  const [exercises, setExercises] = useState([]);
+  const [foods, setFoods] = useState([]);
+  const [libSearch, setLibSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -28,6 +31,35 @@ export default function AdminPanel() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadLibrary(type, search) {
+    try {
+      if (type === "exercises") {
+        const data = await api.adminListExercises(search);
+        setExercises(data);
+      } else {
+        const data = await api.adminListFoods(search);
+        setFoods(data);
+      }
+    } catch (err) {
+      alert("Failed to load: " + err.message);
+    }
+  }
+
+  async function handleLibraryDelete(type, id, name) {
+    if (!window.confirm(`Delete "${name}" from the library?`)) return;
+    try {
+      if (type === "exercises") {
+        await api.adminDeleteExercise(id);
+        loadLibrary("exercises", libSearch);
+      } else {
+        await api.adminDeleteFood(id);
+        loadLibrary("foods", libSearch);
+      }
+    } catch (err) {
+      alert("Failed to delete: " + err.message);
     }
   }
 
@@ -83,6 +115,12 @@ export default function AdminPanel() {
             onClick={() => setActiveTab("clients")}
           >
             Clients ({clients.length})
+          </button>
+          <button
+            className={`btn ${activeTab === "library" ? "" : "btn-secondary"}`}
+            onClick={() => { setActiveTab("library"); loadLibrary("exercises", ""); }}
+          >
+            Library
           </button>
         </div>
       </div>
@@ -173,6 +211,104 @@ export default function AdminPanel() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Library Management Tab */}
+      {activeTab === "library" && !error.includes("Admin") && (
+        <div className="flex-column gap-16">
+          <div className="card">
+            <h3 className="mb-12">Exercise & Food Library</h3>
+            <div className="field-row mb-12">
+              <input
+                type="text"
+                placeholder="Search exercises or foods..."
+                value={libSearch}
+                onChange={(e) => setLibSearch(e.target.value)}
+                style={{ padding: "8px 10px", borderRadius: 6, border: "1px solid var(--border)", fontSize: "0.9rem" }}
+              />
+              <button className="btn" onClick={() => loadLibrary("exercises", libSearch)}>Search Exercises</button>
+              <button className="btn btn-secondary" onClick={() => loadLibrary("foods", libSearch)}>Search Foods</button>
+            </div>
+          </div>
+
+          {/* Exercises Table */}
+          {exercises.length > 0 && (
+            <div className="card">
+              <h4 className="mb-12">Exercises ({exercises.length})</h4>
+              <div className="table-responsive">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Muscle</th>
+                      <th>Equipment</th>
+                      <th>Difficulty</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {exercises.map((ex) => (
+                      <tr key={ex.wger_id}>
+                        <td>{ex.name}</td>
+                        <td>{ex.muscle_group || "—"}</td>
+                        <td className="hide-mobile">{ex.equipment?.length ? (typeof ex.equipment === 'string' ? JSON.parse(ex.equipment).join(", ") : ex.equipment.join(", ")) : "—"}</td>
+                        <td>{ex.difficulty || "—"}</td>
+                        <td>
+                          <button
+                            className="btn btn-small btn-danger"
+                            onClick={() => handleLibraryDelete("exercises", ex.wger_id, ex.name)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Foods Table */}
+          {foods.length > 0 && (
+            <div className="card">
+              <h4 className="mb-12">Foods ({foods.length})</h4>
+              <div className="table-responsive">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Calories</th>
+                      <th>Protein</th>
+                      <th>Carbs</th>
+                      <th>Fat</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {foods.map((food) => (
+                      <tr key={food.fdc_id}>
+                        <td>{food.name}</td>
+                        <td>{food.calories || "—"}</td>
+                        <td>{food.protein_g ? `${food.protein_g}g` : "—"}</td>
+                        <td>{food.carbs_g ? `${food.carbs_g}g` : "—"}</td>
+                        <td>{food.fat_g ? `${food.fat_g}g` : "—"}</td>
+                        <td>
+                          <button
+                            className="btn btn-small btn-danger"
+                            onClick={() => handleLibraryDelete("foods", food.fdc_id, food.name)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>

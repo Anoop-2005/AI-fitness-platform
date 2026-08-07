@@ -7,7 +7,9 @@ authors = [
     { name = "anoop", email = "chauhananoop216@gmail.com" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "fpdf2>=2.8.7",
+]
 
 [project.scripts]
 backend = "backend:main"

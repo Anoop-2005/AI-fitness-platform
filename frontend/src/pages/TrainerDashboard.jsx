@@ -113,6 +113,8 @@ export default function TrainerDashboard() {
   const [dataLoading, setDataLoading] = useState(false);
   const [trainerMessage, setTrainerMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+  const [clientPhotos, setClientPhotos] = useState({});
   const [pendingRequests, setPendingRequests] = useState([]);
 
   // Client States
@@ -172,20 +174,61 @@ export default function TrainerDashboard() {
     setSelectedClient(client);
     setDataLoading(true);
     setActiveTab("workout");
+    setClientPhotos({});
     try {
-      const [profile, workout, diet, analysis, messages] = await Promise.all([
+      const [profile, workout, diet, analysis, messages, photos] = await Promise.all([
         api.trainerGetClientProfile(client.user_id),
         api.trainerGetClientWorkout(client.user_id),
         api.trainerGetClientDiet(client.user_id),
         api.trainerGetClientAnalysis(client.user_id).catch(() => null),
         api.trainerGetMessages(client.user_id).catch(() => []),
+        api.trainerGetClientPhotos(client.user_id).catch(() => ({})),
       ]);
       setClientData({ profile, workout, diet, analysis, messages });
+      setClientPhotos(photos);
     } catch (err) {
       setError(err.message);
     } finally {
       setDataLoading(false);
     }
+  }
+
+  function renderClientPhotos() {
+    const viewTypes = [
+      { key: "front", label: "Front", icon: "🧍" },
+      { key: "side", label: "Side", icon: "🚶" },
+      { key: "back", label: "Back", icon: "🔙" },
+    ];
+
+    return (
+      <div className="flex-column gap-16">
+        {viewTypes.map((vt) => {
+          const photos = clientPhotos[vt.key] || [];
+          return (
+            <div key={vt.key}>
+              <h4 className="mb-12">{vt.icon} {vt.label} View</h4>
+              {photos.length > 0 ? (
+                <div className="photo-gallery">
+                  {photos.map((photo) => (
+                    <div key={photo.id} className="photo-item">
+                      <img
+                        src={photo.photo_url}
+                        alt={`${vt.label} ${photo.uploaded_at}`}
+                      />
+                      <p className="text-mini text-dim mt-4">
+                        {new Date(photo.uploaded_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-small text-dim">No {vt.label} photos uploaded.</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
   }
 
   async function sendTrainerMessage() {
@@ -201,6 +244,34 @@ export default function TrainerDashboard() {
       alert("Failed to send: " + err.message);
     } finally {
       setSending(false);
+    }
+  }
+
+  async function assignWorkout() {
+    if (!selectedClient) return;
+    setAssigning(true);
+    try {
+      const result = await api.trainerCreateWorkout(selectedClient.user_id);
+      setClientData((prev) => ({ ...prev, workout: result }));
+      alert("Workout plan assigned successfully!");
+    } catch (err) {
+      alert("Failed to assign workout: " + err.message);
+    } finally {
+      setAssigning(false);
+    }
+  }
+
+  async function assignDiet() {
+    if (!selectedClient) return;
+    setAssigning(true);
+    try {
+      const result = await api.trainerCreateDiet(selectedClient.user_id);
+      setClientData((prev) => ({ ...prev, diet: result }));
+      alert("Diet plan assigned successfully!");
+    } catch (err) {
+      alert("Failed to assign diet: " + err.message);
+    } finally {
+      setAssigning(false);
     }
   }
 
@@ -409,12 +480,23 @@ export default function TrainerDashboard() {
                 >
                   Message
                 </button>
+                <button
+                  className={`btn ${activeTab === "photos" ? "" : "btn-secondary"}`}
+                  onClick={() => setActiveTab("photos")}
+                >
+                  Photos
+                </button>
               </div>
 
               {/* Workout Tab */}
               {activeTab === "workout" && (
                 <div className="card">
-                  <h3 className="mb-12">Current Workout Plan</h3>
+                  <div className="flex-between mb-12">
+                    <h3>Current Workout Plan</h3>
+                    <button className="btn btn-small" onClick={assignWorkout} disabled={assigning}>
+                      {assigning ? "Generating..." : "↻ Assign New"}
+                    </button>
+                  </div>
                   {clientData.workout.days?.length > 0 ? (
                     clientData.workout.days.map((day) => (
                       <div key={day.day_number} className="mb-16">
@@ -454,7 +536,12 @@ export default function TrainerDashboard() {
               {/* Diet Tab */}
               {activeTab === "diet" && (
                 <div className="card">
-                  <h3 className="mb-12">Current Diet Plan</h3>
+                  <div className="flex-between mb-12">
+                    <h3>Current Diet Plan</h3>
+                    <button className="btn btn-small" onClick={assignDiet} disabled={assigning}>
+                      {assigning ? "Generating..." : "↻ Assign New"}
+                    </button>
+                  </div>
                   {clientData.diet.meals?.length > 0 ? (
                     <div className="table-responsive">
                       <table>
@@ -530,6 +617,14 @@ export default function TrainerDashboard() {
                       {sending ? "Sending..." : "Send Message"}
                     </button>
                   </div>
+                </div>
+              )}
+
+              {/* Photos Tab */}
+              {activeTab === "photos" && (
+                <div className="card">
+                  <h3 className="mb-12">Progress Photos: {selectedClient.full_name}</h3>
+                  {renderClientPhotos()}
                 </div>
               )}
             </>

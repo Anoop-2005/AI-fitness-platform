@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [resetting, setResetting] = useState(false);
   const [streak, setStreak] = useState(0);
+  const [motivation, setMotivation] = useState(null);
   const navigate = useNavigate();
 
   {/*useEffect(() => {
@@ -22,12 +23,14 @@ export default function Dashboard() {
       api.getProfile(), 
       api.getAnalysis().catch(() => null), 
       api.getStreak().catch(() => ({ current_streak: 0 })),
-      api.getProgressLogs ? api.getProgressLogs().catch(() => []) : Promise.resolve([])
+      api.getProgressLogs ? api.getProgressLogs().catch(() => []) : Promise.resolve([]),
+      api.getMotivation().catch(() => null),
     ])
-      .then(([p, a, s, logs]) => { 
-        setProfile(p); 
-        setAnalysis(a); 
+      .then(([p, a, s, logs, mot]) => {
+        setProfile(p);
+        setAnalysis(a);
         setStreak(s.current_streak || 0);
+        setMotivation(mot);
 
         // If you have recent logs, override current weight with the latest logged weight
         if (logs && logs.length > 0) {
@@ -109,6 +112,15 @@ export default function Dashboard() {
           Log Today →
         </Link>
       </div>
+
+      {/* Personalized Motivation */}
+      {motivation && (
+        <div className="card" style={{ borderLeft: "3px solid var(--primary)" }}>
+          <p style={{ margin: 0, fontSize: "0.95rem", fontWeight: 500 }}>
+            💪 {motivation.message}
+          </p>
+        </div>
+      )}
 
       {/* Core Body & Metabolism Metrics */}
       <div className="stat-label stat-margin">Metabolic profile</div>

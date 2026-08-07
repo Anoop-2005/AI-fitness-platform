@@ -13,6 +13,7 @@ class ReviewState(TypedDict):
     logs: list[dict]
     stats: dict
     summary: str
+    target_calories: float
 
 
 def detect_plateau(weight_series: list[float]) -> bool:
@@ -84,6 +85,21 @@ def aggregate_week(logs: list[dict]) -> dict:
             total_calories += float(l.get("calories_consumed", 0) or 0)
             total_protein += float(l.get("protein_g", 0) or 0)
 
+    # Compute waist change
+    waists = []
+    for l in logs:
+        if isinstance(l, dict):
+            w = l.get("waist_cm")
+            if w is not None:
+                waists.append(float(w))
+    waist_change_cm = round(waists[-1] - waists[0], 1) if len(waists) >= 2 else 0
+
+    # Compute total calories burned
+    total_calories_burned = 0.0
+    for l in logs:
+        if isinstance(l, dict):
+            total_calories_burned += float(l.get("calories_burned", 0) or 0)
+
     return {
         "workout_completion_pct": round(workout_done_count / n * 100, 1) if n > 0 else 0,
         "avg_water_l": round(total_water / n, 2) if n > 0 else 0,
@@ -92,6 +108,8 @@ def aggregate_week(logs: list[dict]) -> dict:
         "avg_calories_consumed": round(total_calories / n) if n > 0 else 0,
         "avg_protein_g": round(total_protein / n, 1) if n > 0 else 0,
         "weight_change_kg": round(weights[-1] - weights[0], 2) if len(weights) >= 2 else 0,
+        "waist_change_cm": waist_change_cm,
+        "total_calories_burned": round(total_calories_burned),
         "plateau_detected": detect_plateau(weights) if weights else False,
     }
 
@@ -102,10 +120,18 @@ def _aggregate_node(state: ReviewState) -> dict:
 def _narrate_node(state: ReviewState) -> dict:
     if not state["stats"]:
         return {"summary": "No logs yet this week — start tracking to see a review."}
+    target_calories = state.get("target_calories")
+    calorie_note = ""
+    if target_calories:
+        avg_consumed = state["stats"].get("avg_calories_consumed", 0)
+        if avg_consumed > 0:
+            adherence_pct = round(min(target_calories / avg_consumed * 100, 100) if avg_consumed > target_calories else round(avg_consumed / target_calories * 100, 1))
+            calorie_note = f" Diet adherence: {adherence_pct}% (target {target_calories} kcal, avg {avg_consumed} kcal)."
+
     summary = chat(
         f"Write a short, supportive 3-sentence weekly review using ONLY these numbers, "
         f"don't invent anything not listed here: {state['stats']}. "
-        f"If plateau_detected is true, gently mention it."
+        f"If plateau_detected is true, gently mention it.{calorie_note}"
     )
     return {"summary": summary}
 
@@ -120,7 +146,7 @@ def build_review_graph():
     return graph.compile()
 
 
-def generate_weekly_review(logs: list[dict]) -> dict:
-    result = build_review_graph().invoke({"logs": logs})
+def generate_weekly_review(logs: list[dict], target_calories: float = 0) -> dict:
+    result = build_review_graph().invoke({"logs": logs, "target_calories": target_calories})
     stats = result["stats"]
     return {"stats": stats, "plateau_detected": stats.get("plateau_detected", False), "summary": result["summary"]}

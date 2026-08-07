@@ -157,6 +157,148 @@ def get_client_analysis(
     return row
 
 
+# --- Trainer Plan Assignment ---
+
+@router.post("/clients/{client_id}/workout")
+def trainer_create_workout_plan(
+    client_id: str,
+    user=Depends(require_trainer),
+    db=Depends(get_db)
+):
+    """Generate a workout plan for a specific client (trainer-assigned)."""
+    from datetime import date, timedelta
+    from agents.workout_planner import generate_workout_plan
+
+    # Verify this client belongs to the trainer
+    with db.cursor() as cur:
+        cur.execute("SELECT id FROM trainer_clients WHERE trainer_id = %s AND client_id = %s", (user["id"], client_id))
+        if not cur.fetchone():
+            raise HTTPException(status_code=403, detail="Client not assigned to you")
+
+    # Get client profile using the same helper as plans.py
+    from services.profile_helpers import get_profile
+    profile = get_profile(db, client_id)
+    if not profile:
+        raise HTTPException(status_code=400, detail="Client profile not found")
+
+    # Get latest review for adaptive adjustment
+    with db.cursor() as cur:
+        cur.execute("SELECT * FROM weekly_reviews WHERE user_id = %s ORDER BY id DESC LIMIT 1", (client_id,))
+        review = cur.fetchone()
+
+    rows = generate_workout_plan(db, profile, review)
+    if not rows:
+        raise HTTPException(status_code=422, detail="No matching exercises found — sync exercises first")
+
+    with db.cursor() as cur:
+        cur.execute("""
+            INSERT INTO workout_plans (user_id, week_start, based_on_review_id) VALUES (%s,%s,%s) RETURNING id
+        """, (client_id, date.today(), review["id"] if review else None))
+        plan_id = cur.fetchone()["id"]
+        for r in rows:
+            cur.execute("""
+                INSERT INTO workout_plan_exercises (workout_plan_id, wger_id, day_number, sets, reps, rest_seconds, order_in_day)
+                VALUES (%s,%s,%s,%s,%s,%s,%s)
+            """, (plan_id, r["wger_id"], r["day_number"], r["sets"], r["reps"], r["rest_seconds"], r["order_in_day"]))
+
+    # Fetch and return the created plan
+    with db.cursor() as cur:
+        cur.execute("""
+            SELECT wpe.*, ec.name, ec.muscle_group, ec.instructions, ec.image_url
+            FROM workout_plan_exercises wpe
+            JOIN exercises_cache ec ON ec.wger_id = wpe.wger_id
+            WHERE wpe.workout_plan_id = %s
+            ORDER BY wpe.day_number, wpe.order_in_day
+        """, (plan_id,))
+        exercises = cur.fetchall()
+
+    days = {}
+    for ex in exercises:
+        days.setdefault(ex["day_number"], []).append(ex)
+    return {"plan_id": plan_id, "days": [{"day_number": d, "exercises": ex} for d, ex in sorted(days.items())]}
+
+
+@router.post("/clients/{client_id}/diet")
+def trainer_create_diet_plan(
+    client_id: str,
+    user=Depends(require_trainer),
+    db=Depends(get_db)
+):
+    """Generate a diet plan for a specific client (trainer-assigned)."""
+    from datetime import date
+    from agents.diet_planner import generate_diet_plan
+    from services.profile_helpers import get_profile, get_latest_analysis
+
+    # Verify this client belongs to the trainer
+    with db.cursor() as cur:
+        cur.execute("SELECT id FROM trainer_clients WHERE trainer_id = %s AND client_id = %s", (user["id"], client_id))
+        if not cur.fetchone():
+            raise HTTPException(status_code=403, detail="Client not assigned to you")
+
+    profile = get_profile(db, client_id)
+    analysis = get_latest_analysis(db, client_id)
+    if not profile or not analysis:
+        raise HTTPException(status_code=400, detail="Client profile or analysis not found")
+
+    with db.cursor() as cur:
+        cur.execute("SELECT * FROM weekly_reviews WHERE user_id = %s ORDER BY id DESC LIMIT 1", (client_id,))
+        review = cur.fetchone()
+
+    rows = generate_diet_plan(db, profile, analysis, review)
+    if not rows:
+        raise HTTPException(status_code=422, detail="No matching foods found — sync foods first")
+
+    with db.cursor() as cur:
+        cur.execute("""
+            INSERT INTO diet_plans (user_id, week_start, based_on_review_id) VALUES (%s,%s,%s) RETURNING id
+        """, (client_id, date.today(), review["id"] if review else None))
+        plan_id = cur.fetchone()["id"]
+        for r in rows:
+            cur.execute("""
+                INSERT INTO diet_plan_meals (diet_plan_id, fdc_id, day_number, meal_slot, order_in_day)
+                VALUES (%s,%s,%s,%s,%s)
+            """, (plan_id, r["fdc_id"], r["day_number"], r["meal_slot"], r["order_in_day"]))
+
+    with db.cursor() as cur:
+        cur.execute("""
+            SELECT dpm.*, fc.name, fc.calories, fc.protein_g, fc.carbs_g, fc.fat_g, fc.fiber_g
+            FROM diet_plan_meals dpm
+            JOIN foods_cache fc ON fc.fdc_id = dpm.fdc_id
+            WHERE dpm.diet_plan_id = %s
+            ORDER BY dpm.order_in_day
+        """, (plan_id,))
+        meals = cur.fetchall()
+
+    return {"plan_id": plan_id, "meals": meals}
+
+
+@router.get("/clients/{client_id}/photos")
+def trainer_get_client_photos(
+    client_id: str,
+    user=Depends(require_trainer),
+    db=Depends(get_db)
+):
+    """Get progress photos for a specific client."""
+    with db.cursor() as cur:
+        cur.execute("SELECT id FROM trainer_clients WHERE trainer_id = %s AND client_id = %s", (user["id"], client_id))
+        if not cur.fetchone():
+            raise HTTPException(status_code=403, detail="Client not assigned to you")
+
+    with db.cursor() as cur:
+        cur.execute("""
+            SELECT * FROM progress_photos
+            WHERE user_id = %s
+            ORDER BY view_type, uploaded_at DESC
+        """, (client_id,))
+        photos = cur.fetchall()
+
+    grouped = {}
+    for p in photos:
+        vt = p["view_type"] if isinstance(p, dict) else p.get("view_type")
+        grouped.setdefault(vt, []).append(p)
+    return grouped
+
+
 class SendMessageRequest(BaseModel):
     client_id: str
     message: str

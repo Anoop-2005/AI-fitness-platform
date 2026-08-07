@@ -7,6 +7,8 @@ export default function Workout() {
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState(null);
+  const [enrichment, setEnrichment] = useState(null);
+  const [enriching, setEnriching] = useState(false);
 
   function load() {
     setLoading(true);
@@ -26,6 +28,21 @@ export default function Workout() {
       setError(e.message);
     } finally {
       setRegenerating(false);
+    }
+  }
+
+  async function selectExercise(ex) {
+    setSelectedExercise(ex);
+    setEnrichment(null);
+    setEnriching(true);
+    try {
+      const data = await api.enrichExercise(ex.wger_id);
+      setEnrichment(data);
+    } catch (err) {
+      // Enrichment is optional — fail silently
+      setEnrichment(null);
+    } finally {
+      setEnriching(false);
     }
   }
 
@@ -61,7 +78,7 @@ export default function Workout() {
                 {day.exercises.map((ex) => (
                   <tr
                     key={ex.id}
-                    onClick={() => setSelectedExercise(ex)}
+                    onClick={() => selectExercise(ex)}
                     className="clickable-row"
                     title="Click to view details & instructions"
                   >
@@ -140,6 +157,43 @@ export default function Workout() {
                 }}
               />
             </div>
+
+            {/* Enrichment Data */}
+            {(enriching || enrichment) && (
+              <div className="instructions-section">
+                <h4 className="instructions-title">💡 Coaching Tips</h4>
+                {enriching && <p className="text-dim">Loading coaching tips...</p>}
+                {enrichment && (
+                  <>
+                    {enrichment.calories_per_minute && (
+                      <p className="text-small mb-12">
+                        <strong>Est. calories/min:</strong> {enrichment.calories_per_minute} kcal
+                      </p>
+                    )}
+                    {enrichment.common_mistakes && (
+                      <p className="text-small mb-12">
+                        <strong>Common mistakes:</strong> {enrichment.common_mistakes}
+                      </p>
+                    )}
+                    {enrichment.safety_precautions && (
+                      <p className="text-small mb-12">
+                        <strong>Safety:</strong> {enrichment.safety_precautions}
+                      </p>
+                    )}
+                    {enrichment.alternative_exercises && (
+                      <p className="text-small mb-12">
+                        <strong>Alternatives:</strong> {enrichment.alternative_exercises}
+                      </p>
+                    )}
+                    {enrichment.progression_tips && (
+                      <p className="text-small mb-12">
+                        <strong>Progression:</strong> {enrichment.progression_tips}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
 
             <div className="modal-footer">
               <button className="btn" onClick={() => setSelectedExercise(null)}>
