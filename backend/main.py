@@ -10,7 +10,7 @@ app = FastAPI(title="Iron Ledger", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # dev only; restrict this in production
+    allow_origins=["https://ai-fitness-platform-pka9.onrender.com", "http://localhost:5173"],  
     allow_methods=["*"],
     allow_headers=["*"],
 )
