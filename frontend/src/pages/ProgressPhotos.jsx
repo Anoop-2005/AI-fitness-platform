@@ -1,4 +1,3 @@
-// frontend/src/pages/ProgressPhotos.jsx
 import React, { useState, useRef, useEffect } from "react";
 import { api } from "../lib/api";
 
@@ -16,7 +15,6 @@ export default function ProgressPhotos() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [selectedView, setSelectedView] = useState("front");
   const [compareMode, setCompareMode] = useState(false);
-  const [comparePhotos, setComparePhotos] = useState([]);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -39,16 +37,16 @@ export default function ProgressPhotos() {
       setLoading(false);
     }
   }
-  
+
   async function handleDelete(photoId) {
-  if (!window.confirm("Delete this photo? This cannot be undone.")) return;
-  try {
-    await api.deletePhoto(photoId);
-    await loadPhotos(); // Refresh gallery
-  } catch (err) {
-    alert("Failed to delete: " + err.message);
+    if (!window.confirm("Delete this photo? This cannot be undone.")) return;
+    try {
+      await api.deletePhoto(photoId);
+      await loadPhotos();
+    } catch (err) {
+      alert("Failed to delete: " + err.message);
+    }
   }
-}
 
   async function handleUpload(e) {
     const file = e.target.files?.[0];
@@ -58,18 +56,11 @@ export default function ProgressPhotos() {
     setAnalysisResult(null);
 
     try {
-      // Convert to base64
       const base64 = await fileToBase64(file);
-
-      // Run MediaPipe analysis
       setAnalyzing(true);
       const analysis = await analyzePosture(base64, selectedView);
       setAnalysisResult(analysis);
-
-      // Upload to backend
       await api.uploadPhoto(selectedView, base64);
-
-      // Reload photos
       await loadPhotos();
     } catch (err) {
       alert("Upload failed: " + err.message);
@@ -88,89 +79,55 @@ export default function ProgressPhotos() {
       reader.readAsDataURL(file);
     });
   }
-  // Helper to convert base64 data URL into an HTMLImageElement for WebGL compatibility
-  function loadImageElement(dataUrl) {
+
+  function loadImage(src) {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.crossOrigin = "anonymous";
       img.onload = () => resolve(img);
-      img.onerror = (err) => reject(new Error("Failed to load image for analysis"));
-      img.src = dataUrl;
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = src;
     });
   }
 
   async function analyzePosture(imageData, viewType) {
-  try {
-    const vision = await import("@mediapipe/tasks-vision");
-    const { PoseLandmarker, FilesetResolver } = vision;
+    try {
+      const vision = await import("@mediapipe/tasks-vision");
+      const { PoseLandmarker, FilesetResolver } = vision;
 
-    const filesetResolver = await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.x/wasm"
-    );
+      const filesetResolver = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.x/wasm"
+      );
 
-    // Use CPU delegate - most reliable
-    const pose = await PoseLandmarker.createFromOptions(filesetResolver, {
-      baseOptions: {
-        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
-        delegate: "CPU",
-      },
-      runningMode: "IMAGE",
-      numPoses: 1,
-    });
+      const pose = await PoseLandmarker.createFromOptions(filesetResolver, {
+        baseOptions: {
+          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+          delegate: "CPU",
+        },
+        runningMode: "IMAGE",
+        numPoses: 1,
+      });
 
-    // Load image properly
-    const img = await loadImage(imageData);
-    
-    // Detect pose
-    const result = pose.detect(img);
-    
-    if (!result?.landmarks?.[0]) {
-      return { detected: false, message: "No pose detected. Stand further back so your full body is visible." };
+      const img = await loadImage(imageData);
+      const result = pose.detect(img);
+
+      if (!result?.landmarks?.[0]) {
+        return { detected: false, message: "No pose detected. Stand further back so your full body is visible." };
+      }
+
+      const landmarks = result.landmarks[0];
+      return {
+        detected: true,
+        viewType,
+        postureScore: calculatePostureScore(landmarks, viewType),
+        observations: generateObservations(landmarks, viewType),
+        measurements: estimateMeasurements(landmarks),
+      };
+    } catch (err) {
+      return { detected: false, message: "Analysis failed: " + err.message };
     }
-
-    const landmarks = result.landmarks[0];
-    return {
-      detected: true,
-      viewType,
-      postureScore: calculatePostureScore(landmarks, viewType),
-      observations: generateObservations(landmarks, viewType),
-      measurements: estimateMeasurements(landmarks),
-    };
-  } catch (err) {
-    return { detected: false, message: "Analysis failed: " + err.message };
-  }
-}
-
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error("Failed to load image"));
-    img.src = src;
-  });
-}
-
-  async function initializePoseLandmarker() {
-    // Lazy load MediaPipe Tasks Vision
-    const vision = await import("@mediapipe/tasks-vision");
-    const { PoseLandmarker, FilesetResolver } = vision;
-
-    const filesetResolver = await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.x/wasm"
-    );
-
-    return await PoseLandmarker.createFromOptions(filesetResolver, {
-      baseOptions: {
-        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
-        delegate: "GPU",
-      },
-      runningMode: "IMAGE",
-      numPoses: 1,
-    });
   }
 
   function calculatePostureScore(landmarks, viewType) {
-    // Simple heuristic-based posture scoring
     const scores = {
       symmetry: calculateSymmetry(landmarks, viewType),
       alignment: calculateAlignment(landmarks, viewType),
@@ -181,87 +138,49 @@ function loadImage(src) {
 
   function calculateSymmetry(landmarks, viewType) {
     if (viewType === "front") {
-      const leftShoulder = landmarks[11];
-      const rightShoulder = landmarks[12];
-      const leftHip = landmarks[23];
-      const rightHip = landmarks[24];
-      const shoulderDiff = Math.abs(leftShoulder.y - rightShoulder.y);
-      const hipDiff = Math.abs(leftHip.y - rightHip.y);
+      const shoulderDiff = Math.abs(landmarks[11].y - landmarks[12].y);
+      const hipDiff = Math.abs(landmarks[23].y - landmarks[24].y);
       return Math.max(0, 100 - (shoulderDiff + hipDiff) * 500);
     }
-    return 75; // Default for side/back
+    return 75;
   }
 
   function calculateAlignment(landmarks, viewType) {
     if (viewType === "side") {
-      const ear = landmarks[7];
-      const shoulder = landmarks[11];
-      const hip = landmarks[23];
-      const ankle = landmarks[27];
-      const verticalDeviation = Math.abs(ear.x - ankle.x) + Math.abs(shoulder.x - hip.x);
+      const verticalDeviation = Math.abs(landmarks[7].x - landmarks[27].x) + Math.abs(landmarks[11].x - landmarks[23].x);
       return Math.max(0, 100 - verticalDeviation * 200);
     }
     return 75;
   }
 
-  function calculateBalance(landmarks, viewType) {
-    const leftAnkle = landmarks[27];
-    const rightAnkle = landmarks[28];
-    const centerX = (leftAnkle.x + rightAnkle.x) / 2;
-    const nose = landmarks[0];
-    return Math.max(0, 100 - Math.abs(nose.x - centerX) * 300);
+  function calculateBalance(landmarks) {
+    const centerX = (landmarks[27].x + landmarks[28].x) / 2;
+    return Math.max(0, 100 - Math.abs(landmarks[0].x - centerX) * 300);
   }
 
   function generateObservations(landmarks, viewType) {
     const observations = [];
     const score = calculatePostureScore(landmarks, viewType);
 
-    if (score >= 85) {
-      observations.push("✅ Great posture alignment!");
-    } else if (score >= 70) {
-      observations.push("👍 Good posture with minor areas for improvement.");
-    } else {
-      observations.push("⚠️ Posture could benefit from targeted exercises.");
-    }
+    if (score >= 85) observations.push("✅ Great posture alignment!");
+    else if (score >= 70) observations.push("👍 Good posture with minor areas for improvement.");
+    else observations.push("⚠️ Posture could benefit from targeted exercises.");
 
-    if (viewType === "front") {
-      const leftShoulder = landmarks[11];
-      const rightShoulder = landmarks[12];
-      if (Math.abs(leftShoulder.y - rightShoulder.y) > 0.03) {
-        observations.push("📐 Shoulders appear uneven - consider unilateral shoulder work.");
-      }
+    if (viewType === "front" && Math.abs(landmarks[11].y - landmarks[12].y) > 0.03) {
+      observations.push("📐 Shoulders appear uneven - consider unilateral shoulder work.");
     }
-
-    if (viewType === "side") {
-      const ear = landmarks[7];
-      const shoulder = landmarks[11];
-      if (ear.x < shoulder.x - 0.05) {
-        observations.push("🦒 Forward head posture detected - try chin tucks and neck stretches.");
-      }
+    if (viewType === "side" && landmarks[7].x < landmarks[11].x - 0.05) {
+      observations.push("🦒 Forward head posture detected - try chin tucks and neck stretches.");
     }
-
     return observations;
   }
 
   function estimateMeasurements(landmarks) {
-    // Rough proportional estimates based on pose landmarks
-    const nose = landmarks[0];
-    const leftAnkle = landmarks[27];
-    const heightPixels = Math.abs(nose.y - leftAnkle.y);
-
     return {
-      estimatedHeightPx: Math.round(heightPixels * 100),
+      estimatedHeightPx: Math.round(Math.abs(landmarks[0].y - landmarks[27].y) * 100),
       shoulderWidth: Math.round(Math.abs(landmarks[11].x - landmarks[12].x) * 100),
       hipWidth: Math.round(Math.abs(landmarks[23].x - landmarks[24].x) * 100),
     };
-  }
-
-  function openCompare(viewType, photo) {
-    setCompareMode(true);
-    setComparePhotos((prev) => {
-      const existing = prev.filter((p) => p.view_type !== viewType);
-      return [...existing, photo];
-    });
   }
 
   if (loading) return <div className="page">Loading...</div>;
@@ -280,7 +199,7 @@ function loadImage(src) {
         <h3 className="mb-12">Upload New Photo</h3>
         <div className="field-row mb-12">
           {VIEW_TYPES.map((vt) => (
-            <label key={vt.key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <label key={vt.key} className="checkbox-row">
               <input
                 type="radio"
                 name="viewType"
@@ -312,7 +231,7 @@ function loadImage(src) {
           {analysisResult.detected ? (
             <>
               <div className="stat-value mb-12">Posture Score: {analysisResult.postureScore}/100</div>
-              <ul style={{ paddingLeft: 20 }}>
+              <ul className="pl-20">
                 {analysisResult.observations.map((obs, i) => (
                   <li key={i} className="mb-12">{obs}</li>
                 ))}
@@ -341,8 +260,7 @@ function loadImage(src) {
                     <img
                       src={latest.photo_url}
                       alt={`${vt.label} view`}
-                      style={{ maxWidth: "100%", borderRadius: 8, cursor: "pointer" }}
-                      onClick={() => openCompare(vt.key, latest)}
+                      className="exercise-image"
                     />
                   ) : (
                     <div className="no-image-msg">No {vt.label} photo yet</div>
@@ -355,53 +273,35 @@ function loadImage(src) {
       )}
 
       {/* Photo Gallery by View Type */}
-      {/* Photo Gallery by View Type */}
-        {VIEW_TYPES.map((vt) => (
+      {VIEW_TYPES.map((vt) => (
         <div key={vt.key} className="card">
-            <h3 className="mb-12">{vt.icon} {vt.label} View</h3>
-            {photos[vt.key]?.length > 0 ? (
-            <div style={{ display: "flex", gap: 12, overflowX: "auto", padding: "8px 0" }}>
-            {photos[vt.key].map((photo) => (
-                <div key={photo.id} style={{ minWidth: 150, textAlign: "center", position: "relative" }}>
-                <img
-                src={photo.photo_url}
-                alt={`${vt.label} ${photo.uploaded_at}`}
-                style={{ width: 150, height: 200, objectFit: "cover", borderRadius: 8 }}
-                />
-                <p className="text-mini text-dim mt-4">
-                {new Date(photo.uploaded_at).toLocaleDateString()}
-                </p>
-                {/* Delete Button */}
-                <button
-                onClick={() => handleDelete(photo.id)}
-                style={{
-                    position: "absolute",
-                    top: 4,
-                    right: 4,
-                    background: "rgba(179, 38, 30, 0.9)",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "50%",
-                    width: 24,
-                    height: 24,
-                    cursor: "pointer",
-                    fontSize: "0.75rem",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    }}
+          <h3 className="mb-12">{vt.icon} {vt.label} View</h3>
+          {photos[vt.key]?.length > 0 ? (
+            <div className="photo-gallery">
+              {photos[vt.key].map((photo) => (
+                <div key={photo.id} className="photo-item">
+                  <img
+                    src={photo.photo_url}
+                    alt={`${vt.label} ${photo.uploaded_at}`}
+                  />
+                  <p className="text-mini text-dim mt-4">
+                    {new Date(photo.uploaded_at).toLocaleDateString()}
+                  </p>
+                  <button
+                    className="photo-delete-btn"
+                    onClick={() => handleDelete(photo.id)}
                     title="Delete photo"
-                    >
+                  >
                     ✕
-                    </button>
+                  </button>
                 </div>
-                ))}
+              ))}
             </div>
-            ) : (
+          ) : (
             <p className="text-small text-dim">No photos uploaded yet.</p>
-            )}
+          )}
         </div>
-        ))}
+      ))}
     </div>
   );
 }

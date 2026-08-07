@@ -70,7 +70,7 @@ export default function Dashboard() {
   if (!analysis) {
     return (
       <div className="page">
-        <div className="card" style={{ textAlign: "center", padding: "40px" }}>
+        <div className="card text-center p-40">
           <h2>🏗️ Building your personalized plan...</h2>
           <p className="text-dim mb-16">Your AI coach is calculating your optimal workouts, macros, and goals. This takes just a moment.</p>
           <button className="btn" onClick={() => window.location.reload()}>Refresh Page</button>

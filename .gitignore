@@ -48,6 +48,18 @@ backend/.env
 backend/.env.*
 !backend/.env.example
 
+
+AGENTS.md
+opencode.json
+IMPLEMENTATION_SUMMARY.md
+backend/migrations/001_admin_trainer_tables.sql
+File_structure.md
+.gitignore
+DATABASE.md
+.opencode
+.opencode/commands
+.opencode/commands/make-responsive.md
+
 # ==========================
 # Python Testing
 # ==========================
@@ -96,8 +108,3 @@ Thumbs.db
 *.temp
 *.bak
 *.backup
-
-AGENTS.md
-opencode.json
-IMPLEMENTATION_SUMMARY.md
-backend/migrations/001_admin_trainer_tables.sql

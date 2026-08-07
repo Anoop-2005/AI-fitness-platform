@@ -846,3 +846,311 @@ td {
   margin-top: 12px;
   color: #121314ff;
 }
+
+/* ===== Chat / Message Components ===== */
+.chat-container {
+  min-height: 300px;
+  max-height: 500px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-message {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+}
+
+.chat-message-user {
+  align-self: flex-end;
+  background: var(--primary);
+  color: #fff;
+}
+
+.chat-message-assistant {
+  align-self: flex-start;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.chat-message-time {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  margin-top: 4px;
+}
+
+.chat-input-area {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.chat-textarea {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  resize: none;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+/* ===== Photo Gallery ===== */
+.photo-gallery {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.photo-item {
+  min-width: 150px;
+  text-align: center;
+  position: relative;
+}
+
+.photo-item img {
+  width: 150px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.photo-delete-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(179, 38, 30, 0.9);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== Sidebar Layout ===== */
+.sidebar-layout {
+  display: flex;
+  gap: 24px;
+}
+
+.sidebar {
+  width: 280px;
+  min-width: 200px;
+}
+
+.sidebar-content {
+  flex: 1;
+}
+
+/* ===== Table Responsive Wrapper ===== */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ===== Delete Button ===== */
+.btn-danger {
+  background: var(--danger);
+}
+
+/* ===== Badge ===== */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--primary);
+  color: #fff;
+}
+
+/* ===== Gap Utilities ===== */
+.gap-4 { gap: 4px; }
+.gap-8 { gap: 8px; }
+.gap-12 { gap: 12px; }
+.gap-16 { gap: 16px; }
+.gap-24 { gap: 24px; }
+
+/* ===== Justify Content ===== */
+.justify-between { justify-content: space-between; }
+
+/* ===== Opacity ===== */
+.opacity-80 { opacity: 0.8; }
+
+/* ===== Flex Utilities ===== */
+.flex-1 { flex: 1; }
+.flex-auto { flex: auto; }
+
+/* ===== Padding Utilities ===== */
+.pl-20 { padding-left: 20px; }
+.p-8 { padding: 8px; }
+.p-40 { padding: 40px; }
+
+/* ===== Background Utilities ===== */
+.bg-dim { background: rgba(0, 0, 0, 0.02); }
+.bg-primary-light { background: rgba(47, 111, 79, 0.1); }
+
+/* ===== Responsive Breakpoints ===== */
+
+/* Tablet and below (<= 900px) */
+@media (max-width: 900px) {
+  .page {
+    padding: 16px;
+  }
+
+  .page-wide,
+  .page-medium,
+  .page-narrow {
+    max-width: 100%;
+  }
+
+  /* Topbar adjustments */
+  .topbar {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .topbar nav {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .topbar nav a {
+    white-space: nowrap;
+    font-size: 0.85rem;
+  }
+
+  /* Sidebar stacks vertically */
+  .sidebar-layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  /* Card grid adjusts */
+  .card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  /* Tables scroll horizontally */
+  table {
+    font-size: 0.85rem;
+  }
+
+  th, td {
+    padding: 6px;
+  }
+
+  /* Flex containers wrap */
+  .flex-between {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+/* Mobile (<= 600px) */
+@media (max-width: 600px) {
+  .page {
+    padding: 12px;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .topbar .brand {
+    font-size: 1rem;
+    width: 100%;
+  }
+
+  .topbar nav {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Cards full width */
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .grid-split {
+    grid-template-columns: 1fr;
+  }
+
+  /* Chat input stacks */
+  .chat-input-area {
+    flex-direction: column;
+  }
+
+  .chat-input-area .btn {
+    width: 100%;
+  }
+
+  /* Modals full screen */
+  .modal-overlay {
+    padding: 8px;
+  }
+
+  .modal-card {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 8px;
+  }
+
+  /* Buttons on mobile */
+  .btn {
+    padding: 10px 14px;
+    font-size: 0.85rem;
+  }
+
+  /* Stat values smaller */
+  .stat-value {
+    font-size: 1.3rem;
+  }
+
+  /* Photo gallery smaller items */
+  .photo-item {
+    min-width: 120px;
+  }
+
+  .photo-item img {
+    width: 120px;
+    height: 160px;
+  }
+
+  /* Hide less important table columns on mobile */
+  table .hide-mobile {
+    display: none;
+  }
+
+  /* Equipment grid scrollable */
+  .equipment-grid {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .equipment-btn {
+    flex-shrink: 0;
+  }
+}

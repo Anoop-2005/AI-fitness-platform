@@ -70,40 +70,32 @@ export default function Coach() {
       </div>
 
       {/* Chat Messages */}
-      <div className="card" style={{ minHeight: 400, maxHeight: 500, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
+      <div className="card chat-container">
         {messages.map((msg, i) => (
           <div
             key={i}
-            style={{
-              alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-              maxWidth: "80%",
-              padding: "10px 14px",
-              borderRadius: 12,
-              background: msg.role === "user" ? "var(--primary)" : "var(--surface)",
-              color: msg.role === "user" ? "#fff" : "var(--text)",
-              border: msg.role === "assistant" ? "1px solid var(--border)" : "none",
-            }}
+            className={`chat-message ${msg.role === "user" ? "chat-message-user" : "chat-message-assistant"}`}
           >
-            <div style={{ fontSize: "0.85rem", whiteSpace: "pre-wrap" }}>{msg.content}</div>
+            <div>{msg.content}</div>
           </div>
         ))}
         {loading && (
-          <div style={{ alignSelf: "flex-start", padding: "10px 14px", borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)" }}>
-            <span style={{ fontSize: "0.85rem" }}>Thinking...</span>
+          <div className="chat-message chat-message-assistant">
+            <span>Thinking...</span>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input Area */}
-      <div className="flex-between mt-16" style={{ gap: 12 }}>
+      <div className="chat-input-area mt-16">
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask me anything about fitness, nutrition, or your plan..."
           rows={2}
-          style={{ flex: 1, padding: "10px 14px", borderRadius: 8, border: "1px solid var(--border)", resize: "none", fontSize: "0.9rem" }}
+          className="chat-textarea"
         />
         <button className="btn" onClick={() => sendMessage()} disabled={loading || !input.trim()}>
           Send

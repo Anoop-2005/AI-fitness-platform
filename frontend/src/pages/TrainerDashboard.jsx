@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { api } from "../lib/api";
 
-// --- Sub-component: Client Messaging & Marketplace View ---
 function ClientInbox({ trainer, availableTrainers, onSelectTrainer, messages, newMessage, setNewMessage, onSend, sending, currentUserId }) {
   const [selectingId, setSelectingId] = useState(null);
 
@@ -16,29 +15,27 @@ function ClientInbox({ trainer, availableTrainers, onSelectTrainer, messages, ne
       <h2>💬 Messages with Your Trainer</h2>
 
       {!trainer ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+        <div className="flex-column gap-24">
           <div className="card">
             <p className="text-dim">No trainer has been assigned to you yet. Choose a professional trainer below to get started!</p>
           </div>
 
-          {/* Trainer Marketplace List */}
           <div className="card">
             <h3 className="mb-12">Available Trainers</h3>
             {availableTrainers.length === 0 ? (
               <p className="text-small text-dim">No trainers are currently available.</p>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 16 }}>
+              <div className="card-grid gap-16" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" }}>
                 {availableTrainers.map((t) => (
-                  <div key={t.user_id} className="card" style={{ border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 12 }}>
+                  <div key={t.user_id} className="card flex-column justify-between gap-12">
                     <div>
-                      <h4 style={{ marginBottom: 4 }}>{t.full_name}</h4>
+                      <h4 className="mb-4">{t.full_name}</h4>
                       <p className="text-small text-dim">
                         {t.age}y | {t.gender} | {t.activity_level || "Fitness Pro"}
                       </p>
                     </div>
                     <button
-                      className="btn"
-                      style={{ width: "100%" }}
+                      className="btn btn-full"
                       disabled={selectingId === t.user_id}
                       onClick={() => handleSelect(t.user_id)}
                     >
@@ -61,8 +58,7 @@ function ClientInbox({ trainer, availableTrainers, onSelectTrainer, messages, ne
             </div>
           </div>
 
-          {/* Message List */}
-          <div className="card" style={{ minHeight: 300, maxHeight: 400, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="card chat-container">
             {messages.length === 0 ? (
               <p className="text-dim text-center">No messages yet. Start a conversation!</p>
             ) : (
@@ -71,19 +67,11 @@ function ClientInbox({ trainer, availableTrainers, onSelectTrainer, messages, ne
                 return (
                   <div
                     key={msg.id}
-                    style={{
-                      alignSelf: isFromClient ? "flex-end" : "flex-start",
-                      maxWidth: "80%",
-                      padding: "10px 14px",
-                      borderRadius: 12,
-                      background: isFromClient ? "var(--primary)" : "var(--surface)",
-                      color: isFromClient ? "#fff" : "var(--text)",
-                      border: isFromClient ? "none" : "1px solid var(--border)",
-                    }}
+                    className={`chat-message ${isFromClient ? "chat-message-user" : "chat-message-assistant"}`}
                   >
-                    <div style={{ fontSize: "0.85rem" }}>{msg.message}</div>
-                    <div style={{ fontSize: "0.7rem", opacity: 0.7, marginTop: 4, textAlign: "right" }}>
-                      {new Date(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <div>{msg.message}</div>
+                    <div className="chat-message-time">
+                      {new Date(msg.sent_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </div>
                   </div>
                 );
@@ -91,15 +79,14 @@ function ClientInbox({ trainer, availableTrainers, onSelectTrainer, messages, ne
             )}
           </div>
 
-          {/* Reply Box */}
           <div className="card">
-            <div style={{ display: "flex", gap: 12 }}>
+            <div className="chat-input-area">
               <textarea
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type your reply..."
                 rows={3}
-                style={{ flex: 1, padding: "10px 14px", borderRadius: 8, border: "1px solid var(--border)", resize: "none" }}
+                className="chat-textarea"
               />
               <button className="btn" onClick={onSend} disabled={sending || !newMessage.trim()}>
                 {sending ? "Sending..." : "Reply"}
@@ -112,7 +99,6 @@ function ClientInbox({ trainer, availableTrainers, onSelectTrainer, messages, ne
   );
 }
 
-// --- Main Component ---
 export default function TrainerDashboard() {
   const [userRole, setUserRole] = useState(null);
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -143,7 +129,7 @@ export default function TrainerDashboard() {
     setLoading(true);
     try {
       const profile = await api.getProfile();
-      const role = profile.role || "client"; // null/undefined treated as client
+      const role = profile.role || "client";
       setUserRole(role);
       setCurrentUserId(profile.user_id);
 
@@ -159,37 +145,28 @@ export default function TrainerDashboard() {
     }
   }
 
-  // --- Trainer Logic ---
-  {/*(async function loadTrainerDashboard() {
+  async function loadTrainerDashboard() {
     try {
-      const data = await api.trainerGetClients();
-      setClients(data);
+      const [clientsData, requestsData] = await Promise.all([
+        api.trainerGetClients(),
+        api.trainerGetPendingRequests().catch(() => []),
+      ]);
+      setClients(clientsData);
+      setPendingRequests(requestsData);
     } catch (err) {
       setError(err.message);
     }
-  }*/}
-  async function loadTrainerDashboard() {
-  try {
-    const [clientsData, requestsData] = await Promise.all([
-      api.trainerGetClients(),
-      api.trainerGetPendingRequests().catch(() => [])
-    ]);
-    setClients(clientsData);
-    setPendingRequests(requestsData);
-  } catch (err) {
-    setError(err.message);
   }
- }
- 
- async function handleRequestAction(clientId, action) {
-  try {
-    await api.trainerRespondRequest(clientId, action);
-    alert(`Request ${action}ed!`);
-    await loadTrainerDashboard(); // Refresh lists
-  } catch (err) {
-    alert("Failed to process request: " + err.message);
+
+  async function handleRequestAction(clientId, action) {
+    try {
+      await api.trainerRespondRequest(clientId, action);
+      alert(`Request ${action}ed!`);
+      await loadTrainerDashboard();
+    } catch (err) {
+      alert("Failed to process request: " + err.message);
+    }
   }
-}
 
   async function selectClient(client) {
     setSelectedClient(client);
@@ -201,7 +178,7 @@ export default function TrainerDashboard() {
         api.trainerGetClientWorkout(client.user_id),
         api.trainerGetClientDiet(client.user_id),
         api.trainerGetClientAnalysis(client.user_id).catch(() => null),
-        api.trainerGetMessages(client.user_id).catch(() => [])
+        api.trainerGetMessages(client.user_id).catch(() => []),
       ]);
       setClientData({ profile, workout, diet, analysis, messages });
     } catch (err) {
@@ -218,9 +195,8 @@ export default function TrainerDashboard() {
       await api.trainerSendMessage(selectedClient.user_id, trainerMessage);
       setTrainerMessage("");
       alert("Message sent successfully!");
-      
       const updatedMessages = await api.trainerGetMessages(selectedClient.user_id);
-      setClientData(prev => ({ ...prev, messages: updatedMessages }));
+      setClientData((prev) => ({ ...prev, messages: updatedMessages }));
     } catch (err) {
       alert("Failed to send: " + err.message);
     } finally {
@@ -228,20 +204,6 @@ export default function TrainerDashboard() {
     }
   }
 
-  // --- Client Logic ---
-  {/*async function loadClientInbox() {
-    try {
-      const [trainerData, msgs] = await Promise.all([
-        api.getMyTrainer().catch(() => null),
-        api.getMyMessages().catch(() => []),
-      ]);
-      setTrainer(trainerData);
-      setMessages(msgs);
-    } catch (err) {
-      setError(err.message);
-    }
-  }*/}
-  // --- Client Logic ---
   async function loadClientInbox() {
     try {
       const [trainerData, msgs, trainersList] = await Promise.all([
@@ -261,7 +223,7 @@ export default function TrainerDashboard() {
     try {
       await api.requestTrainer(trainerId);
       alert("Trainer selected successfully!");
-      await loadClientInbox(); // Reload inbox/trainer status
+      await loadClientInbox();
     } catch (err) {
       alert("Failed to select trainer: " + err.message);
     }
@@ -273,7 +235,7 @@ export default function TrainerDashboard() {
     try {
       await api.clientSendMessage(newMessage);
       setNewMessage("");
-      await loadClientInbox(); // Refresh messages
+      await loadClientInbox();
     } catch (err) {
       alert("Failed to send: " + err.message);
     } finally {
@@ -291,7 +253,6 @@ export default function TrainerDashboard() {
     );
   }
 
-  // Render based on role
   if (userRole !== "trainer") {
     return (
       <ClientInbox
@@ -308,38 +269,37 @@ export default function TrainerDashboard() {
     );
   }
 
-  // --- Trainer Dashboard View ---
   return (
     <div className="page page-wide">
       <h2>Trainer Dashboard</h2>
 
-      {/* Pending Client Requests Section */}
+      {/* Pending Client Requests */}
       {pendingRequests.length > 0 && (
-        <div className="card" style={{ marginTop: 16, marginBottom: 24, border: "1px solid var(--primary)" }}>
+        <div className="card mb-16 bg-primary-light">
           <h3 className="mb-12">🔔 Pending Client Requests ({pendingRequests.length})</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+          <div className="card-grid gap-16" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
             {pendingRequests.map((req) => (
-              <div key={req.client_id} className="card" style={{ background: "var(--surface)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 12 }}>
+              <div key={req.client_id} className="card flex-column justify-between gap-12">
                 <div>
-                  <h4 style={{ marginBottom: 4 }}>{req.full_name}</h4>
+                  <h4 className="mb-4">{req.full_name}</h4>
                   <p className="text-small text-dim">
                     {req.age}y | {req.gender} | Goal: {req.primary_goal?.replace("_", " ") || "General"}
                   </p>
-                  <p className="text-small text-dim" style={{ marginTop: 4 }}>
+                  <p className="text-small text-dim mt-4">
                     Activity: {req.activity_level || "Not specified"}
                   </p>
                 </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button 
-                    className="btn" 
-                    style={{ flex: 1, background: "green" }}
+                <div className="flex-wrap gap-8">
+                  <button
+                    className="btn flex-1"
+                    style={{ background: "green" }}
                     onClick={() => handleRequestAction(req.client_id, "accept")}
                   >
                     Accept
                   </button>
-                  <button 
-                    className="btn btn-secondary" 
-                    style={{ flex: 1, color: "var(--danger)", borderColor: "var(--danger)" }}
+                  <button
+                    className="btn btn-secondary flex-1"
+                    style={{ color: "var(--danger)", borderColor: "var(--danger)" }}
                     onClick={() => handleRequestAction(req.client_id, "declined")}
                   >
                     Decline
@@ -351,15 +311,15 @@ export default function TrainerDashboard() {
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 24, marginTop: 16 }}>
+      <div className="sidebar-layout mt-16">
         {/* Client List Sidebar */}
-        <div style={{ width: 280, minWidth: 200 }}>
+        <div className="sidebar">
           <div className="card">
             <h3 className="mb-12">My Clients</h3>
             {clients.length === 0 ? (
               <p className="text-small text-dim">No clients assigned yet.</p>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="flex-column gap-8">
                 {clients.map((client) => (
                   <button
                     key={client.user_id}
@@ -367,8 +327,8 @@ export default function TrainerDashboard() {
                     style={{ textAlign: "left", width: "100%" }}
                     onClick={() => selectClient(client)}
                   >
-                    <div style={{ fontWeight: 600 }}>{client.full_name}</div>
-                    <div style={{ fontSize: "0.75rem", opacity: 0.8 }}>
+                    <div className="fw-600">{client.full_name}</div>
+                    <div className="text-mini opacity-80">
                       {client.age}y | {client.gender}
                     </div>
                   </button>
@@ -379,7 +339,7 @@ export default function TrainerDashboard() {
         </div>
 
         {/* Client Details */}
-        <div style={{ flex: 1 }}>
+        <div className="sidebar-content">
           {!selectedClient ? (
             <div className="card">
               <p className="text-dim">Select a client to view their details.</p>
@@ -407,7 +367,6 @@ export default function TrainerDashboard() {
                   </div>
                 </div>
 
-                {/* Body Stats */}
                 {clientData.analysis && (
                   <div className="card-grid grid-auto-180 mt-16">
                     <div>
@@ -431,7 +390,7 @@ export default function TrainerDashboard() {
               </div>
 
               {/* Tabs */}
-              <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+              <div className="flex-wrap gap-8 mt-16 mb-16">
                 <button
                   className={`btn ${activeTab === "workout" ? "" : "btn-secondary"}`}
                   onClick={() => setActiveTab("workout")}
@@ -460,28 +419,30 @@ export default function TrainerDashboard() {
                     clientData.workout.days.map((day) => (
                       <div key={day.day_number} className="mb-16">
                         <h4 className="mb-12">Day {day.day_number}</h4>
-                        <table>
-                          <thead>
-                            <tr>
-                              <th>Exercise</th>
-                              <th>Muscle</th>
-                              <th>Sets</th>
-                              <th>Reps</th>
-                              <th>Rest</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {day.exercises.map((ex, i) => (
-                              <tr key={i}>
-                                <td>{ex.name}</td>
-                                <td>{ex.muscle_group}</td>
-                                <td>{ex.sets}</td>
-                                <td>{ex.reps}</td>
-                                <td>{ex.rest_seconds}s</td>
+                        <div className="table-responsive">
+                          <table>
+                            <thead>
+                              <tr>
+                                <th>Exercise</th>
+                                <th>Muscle</th>
+                                <th>Sets</th>
+                                <th>Reps</th>
+                                <th>Rest</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody>
+                              {day.exercises.map((ex, i) => (
+                                <tr key={i}>
+                                  <td>{ex.name}</td>
+                                  <td>{ex.muscle_group}</td>
+                                  <td>{ex.sets}</td>
+                                  <td>{ex.reps}</td>
+                                  <td>{ex.rest_seconds}s</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     ))
                   ) : (
@@ -495,30 +456,32 @@ export default function TrainerDashboard() {
                 <div className="card">
                   <h3 className="mb-12">Current Diet Plan</h3>
                   {clientData.diet.meals?.length > 0 ? (
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Meal</th>
-                          <th>Food</th>
-                          <th>Calories</th>
-                          <th>Protein</th>
-                          <th>Carbs</th>
-                          <th>Fat</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {clientData.diet.meals.map((meal, i) => (
-                          <tr key={i}>
-                            <td className="text-capitalize">{meal.meal_slot.replace("_", " ")}</td>
-                            <td>{meal.name}</td>
-                            <td>{Math.round(meal.calories)} kcal</td>
-                            <td>{Math.round(meal.protein_g)}g</td>
-                            <td>{Math.round(meal.carbs_g)}g</td>
-                            <td>{Math.round(meal.fat_g)}g</td>
+                    <div className="table-responsive">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Meal</th>
+                            <th>Food</th>
+                            <th>Calories</th>
+                            <th>Protein</th>
+                            <th>Carbs</th>
+                            <th>Fat</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {clientData.diet.meals.map((meal, i) => (
+                            <tr key={i}>
+                              <td className="text-capitalize">{meal.meal_slot.replace("_", " ")}</td>
+                              <td>{meal.name}</td>
+                              <td>{Math.round(meal.calories)} kcal</td>
+                              <td>{Math.round(meal.protein_g)}g</td>
+                              <td>{Math.round(meal.carbs_g)}g</td>
+                              <td>{Math.round(meal.fat_g)}g</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   ) : (
                     <p className="text-small text-dim">No diet plan generated yet.</p>
                   )}
@@ -526,13 +489,11 @@ export default function TrainerDashboard() {
               )}
 
               {/* Message Tab */}
-              {/* Message Tab */}
               {activeTab === "message" && (
                 <div className="card">
                   <h3 className="mb-12">Conversation with {selectedClient.full_name}</h3>
-                  
-                  {/* Message History Feed */}
-                  <div style={{ minHeight: 250, maxHeight: 350, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8, marginBottom: 16, padding: 8, background: "rgba(0,0,0,0.02)", borderRadius: 8 }}>
+
+                  <div className="chat-container mb-16 bg-dim p-8">
                     {clientData.messages?.length === 0 ? (
                       <p className="text-dim text-center">No messages yet with this client.</p>
                     ) : (
@@ -541,19 +502,11 @@ export default function TrainerDashboard() {
                         return (
                           <div
                             key={msg.id}
-                            style={{
-                              alignSelf: isFromTrainer ? "flex-end" : "flex-start",
-                              maxWidth: "80%",
-                              padding: "10px 14px",
-                              borderRadius: 12,
-                              background: isFromTrainer ? "var(--primary)" : "var(--surface)",
-                              color: isFromTrainer ? "#fff" : "var(--text)",
-                              border: isFromTrainer ? "none" : "1px solid var(--border)",
-                            }}
+                            className={`chat-message ${isFromTrainer ? "chat-message-user" : "chat-message-assistant"}`}
                           >
-                            <div style={{ fontSize: "0.9rem" }}>{msg.message}</div>
-                            <div style={{ fontSize: "0.65rem", opacity: 0.7, marginTop: 4, textAlign: "right" }}>
-                              {new Date(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            <div>{msg.message}</div>
+                            <div className="chat-message-time">
+                              {new Date(msg.sent_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                             </div>
                           </div>
                         );
@@ -561,26 +514,18 @@ export default function TrainerDashboard() {
                     )}
                   </div>
 
-                  {/* Send Box */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div className="chat-input-area">
                     <textarea
                       value={trainerMessage}
                       onChange={(e) => setTrainerMessage(e.target.value)}
                       placeholder="Type your message here..."
                       rows={3}
-                      style={{
-                        padding: "10px 14px",
-                        borderRadius: 8,
-                        border: "1px solid var(--border)",
-                        resize: "none",
-                        fontSize: "0.9rem",
-                      }}
+                      className="chat-textarea"
                     />
                     <button
                       className="btn"
                       onClick={sendTrainerMessage}
                       disabled={sending || !trainerMessage.trim()}
-                      style={{ alignSelf: "flex-start" }}
                     >
                       {sending ? "Sending..." : "Send Message"}
                     </button>

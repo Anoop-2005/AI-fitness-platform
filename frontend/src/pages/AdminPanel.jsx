@@ -66,16 +66,12 @@ export default function AdminPanel() {
             <div className="stat-label">Clients</div>
             <div className="stat-value">{stats.clients}</div>
           </div>
-          {/*<div className="card">
-            <div className="stat-label">Logs (30 days)</div>
-            <div className="stat-value">{stats.recent_logs}</div>
-          </di>*/}
         </div>
       )}
 
       {/* Tabs */}
       <div className="flex-between mb-16">
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="flex-wrap gap-8">
           <button
             className={`btn ${activeTab === "trainers" ? "" : "btn-secondary"}`}
             onClick={() => setActiveTab("trainers")}
@@ -105,36 +101,37 @@ export default function AdminPanel() {
           {trainers.length === 0 ? (
             <p className="text-small text-dim">No trainers registered yet.</p>
           ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Gender</th>
-                  <th>Joined</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {trainers.map((trainer) => (
-                  <tr key={trainer.user_id}>
-                    <td>{trainer.full_name}</td>
-                    <td>{trainer.email || "N/A"}</td>
-                    <td>{trainer.gender}</td>
-                    <td>{new Date(trainer.created_at).toLocaleDateString()}</td>
-                    <td>
-                      <button
-                        className="btn btn-small"
-                        style={{ background: "var(--danger)" }}
-                        onClick={() => handleDelete(trainer.user_id, trainer.full_name)}
-                      >
-                        Delete
-                      </button>
-                    </td>
+            <div className="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Gender</th>
+                    <th>Joined</th>
+                    <th>Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {trainers.map((trainer) => (
+                    <tr key={trainer.user_id}>
+                      <td>{trainer.full_name}</td>
+                      <td>{trainer.email || "N/A"}</td>
+                      <td className="hide-mobile">{trainer.gender}</td>
+                      <td>{new Date(trainer.created_at).toLocaleDateString()}</td>
+                      <td>
+                        <button
+                          className="btn btn-small btn-danger"
+                          onClick={() => handleDelete(trainer.user_id, trainer.full_name)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
@@ -146,36 +143,37 @@ export default function AdminPanel() {
           {clients.length === 0 ? (
             <p className="text-small text-dim">No clients registered yet.</p>
           ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Goal</th>
-                  <th>Joined</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clients.map((client) => (
-                  <tr key={client.user_id}>
-                    <td>{client.full_name}</td>
-                    <td>{client.email || "N/A"}</td>
-                    <td>{client.primary_goal || "N/A"}</td>
-                    <td>{new Date(client.created_at).toLocaleDateString()}</td>
-                    <td>
-                      <button
-                        className="btn btn-small"
-                        style={{ background: "var(--danger)" }}
-                        onClick={() => handleDelete(client.user_id, client.full_name)}
-                      >
-                        Delete
-                      </button>
-                    </td>
+            <div className="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th className="hide-mobile">Goal</th>
+                    <th>Joined</th>
+                    <th>Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {clients.map((client) => (
+                    <tr key={client.user_id}>
+                      <td>{client.full_name}</td>
+                      <td>{client.email || "N/A"}</td>
+                      <td className="hide-mobile">{client.primary_goal || "N/A"}</td>
+                      <td>{new Date(client.created_at).toLocaleDateString()}</td>
+                      <td>
+                        <button
+                          className="btn btn-small btn-danger"
+                          onClick={() => handleDelete(client.user_id, client.full_name)}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
