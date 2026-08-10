@@ -219,6 +219,7 @@ def build_diet_plan_graph(db, exclude_terms: list[str]):
     graph.add_node("fetch_candidates", fetch_candidates_node)
     graph.add_node("llm_select", llm_select_node)
     graph.add_node("validate", validate_node)
+    
     graph.set_entry_point("fetch_candidates")
     graph.add_edge("fetch_candidates", "llm_select")
     graph.add_edge("llm_select", "validate")

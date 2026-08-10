@@ -59,6 +59,8 @@ DATABASE.md
 .opencode
 .opencode/commands
 .opencode/commands/make-responsive.md
+backend/migrations/
+docs/
 
 # ==========================
 # Python Testing

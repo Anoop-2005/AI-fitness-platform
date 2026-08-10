@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
+import { Dumbbell } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -22,7 +23,12 @@ export default function Login() {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
-        <h2>Log in</h2>
+        <div className="auth-logo">
+          <div className="auth-logo-icon"><Dumbbell size={20} strokeWidth={2.5} /></div>
+          <div className="auth-logo-text">Iron Ledger</div>
+        </div>
+        <h2>Welcome back</h2>
+        <p className="page-subtitle">Log in to pick up where you left off.</p>
         {error && <div className="error-banner">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="field">
