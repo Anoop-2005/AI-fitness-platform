@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { api } from "../lib/api";
+import { Camera } from "lucide-react";
 
 const VIEW_TYPES = [
   { key: "front", label: "Front", icon: "🧍", description: "Face the camera directly" },
@@ -183,12 +184,23 @@ export default function ProgressPhotos() {
     };
   }
 
-  if (loading) return <div className="page">Loading...</div>;
+  /*if (loading) return <div className="page">Loading...</div>;*/
+  if (loading) {
+    return (
+      <div className="page page-loading">
+        <div className="spinner"></div>
+        <p>Loading progress photos...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="page page-wide">
-      <div className="flex-between">
-        <h2>📸 Progress Photos</h2>
+      <div className="section-header flex-between">
+        <div className="flex-center gap-8">
+          <Camera size={22} />
+          <h2>Progress Photos</h2>
+        </div>
         <button className="btn btn-secondary btn-small" onClick={() => setCompareMode(!compareMode)}>
           {compareMode ? "Exit Compare" : "🔍 Compare Photos"}
         </button>
@@ -221,13 +233,18 @@ export default function ProgressPhotos() {
           onChange={handleUpload}
           disabled={uploading}
         />
-        {uploading && <p className="text-small mt-12">{analyzing ? "Analyzing posture..." : "Uploading..."}</p>}
+        {uploading && (
+          <div className="flex-center gap-8 mt-12">
+            <div className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }}></div>
+            <p className="text-small">{analyzing ? "Analyzing posture..." : "Uploading..."}</p>
+          </div>
+        )}
       </div>
 
       {/* Analysis Result */}
       {analysisResult && (
         <div className="card">
-          <h3 className="mb-12">🤖 AI Posture Analysis</h3>
+          <h3 className="mb-12"> AI Posture Analysis</h3>
           {analysisResult.detected ? (
             <>
               <div className="stat-value mb-12">Posture Score: {analysisResult.postureScore}/100</div>
@@ -263,7 +280,9 @@ export default function ProgressPhotos() {
                       className="exercise-image"
                     />
                   ) : (
-                    <div className="no-image-msg">No {vt.label} photo yet</div>
+                    <div className="empty-state">
+                      <p>No photos uploaded yet.</p>
+                    </div>
                   )}
                 </div>
               );
@@ -298,7 +317,9 @@ export default function ProgressPhotos() {
               ))}
             </div>
           ) : (
-            <p className="text-small text-dim">No photos uploaded yet.</p>
+            <div className="empty-state">
+              <p>No photos uploaded yet.</p>
+            </div>
           )}
         </div>
       ))}

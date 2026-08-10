@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { api } from "../lib/api";
+import { ClipboardList, CheckCircle2, Save } from "lucide-react";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -58,7 +59,10 @@ export default function Habits() {
 
   return (
     <div className="page page-narrow">
+      <div className="section-header">
+      <ClipboardList size={22} /> 
       <h2>Log today</h2>
+      </div>
       {error && <div className="error-banner">{error}</div>}
       {saved && <div className="info-banner">Successfully saved log for {form.log_date}!</div>}
 
@@ -118,6 +122,7 @@ export default function Habits() {
         </div>
 
          <button className="btn mt-16" onClick={handleSave} disabled={loading}>
+          <Save size={16} />
           {loading ? "Saving..." : "Save log"}
         </button>
       </div>

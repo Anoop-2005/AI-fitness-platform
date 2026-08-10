@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { api } from "../lib/api";
+import { ShieldAlert } from "lucide-react";
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState("trainers");
@@ -43,26 +44,37 @@ export default function AdminPanel() {
     }
   }
 
-  if (loading) return <div className="page">Loading...</div>;
+  /*if (loading) return <div className="page">Loading...</div>;*/
+  if (loading) {
+    return (
+      <div className="page page-loading">
+        <div className="spinner"></div>
+        <p>Loading admin panel...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="page page-wide">
+      <div className="section-header">
+      <ShieldAlert size={22} />
       <h2>Admin Panel</h2>
+    </div>
 
       {error && <div className="error-banner">{error}</div>}
 
       {/* Stats Cards */}
       {stats && (
         <div className="card-grid grid-auto-180 mb-16">
-          <div className="card">
+          <div className="card card-no-margin">
             <div className="stat-label">Total Users</div>
             <div className="stat-value">{stats.total_users}</div>
           </div>
-          <div className="card">
+          <div className="card card-no-margin">
             <div className="stat-label">Trainers</div>
             <div className="stat-value">{stats.trainers}</div>
           </div>
-          <div className="card">
+          <div className="card card-no-margin">
             <div className="stat-label">Clients</div>
             <div className="stat-value">{stats.clients}</div>
           </div>
@@ -87,12 +99,12 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* Error for non-admin */}
+      {/* Error for non-admin 
       {error.includes("Admin access") && (
         <div className="card">
           <p>You don't have admin privileges. Please contact an administrator.</p>
         </div>
-      )}
+      )}*/}
 
       {/* Trainers List */}
       {activeTab === "trainers" && !error.includes("Admin") && (
@@ -141,7 +153,9 @@ export default function AdminPanel() {
         <div className="card">
           <h3 className="mb-12">All Clients</h3>
           {clients.length === 0 ? (
-            <p className="text-small text-dim">No clients registered yet.</p>
+            <div className="empty-state">
+            <p>No clients registered yet.</p>
+            </div>
           ) : (
             <div className="table-responsive">
               <table>

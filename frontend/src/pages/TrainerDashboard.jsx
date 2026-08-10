@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { api } from "../lib/api";
 
-function ClientInbox({ trainer, availableTrainers, onSelectTrainer, messages, newMessage, setNewMessage, onSend, sending, currentUserId }) {
+function ClientInbox({ 
+  trainer, 
+  availableTrainers, 
+  onSelectTrainer, 
+  messages, 
+  newMessage, 
+  setNewMessage, 
+  onSend, 
+  sending, 
+  currentUserId 
+}) {
   const [selectingId, setSelectingId] = useState(null);
 
   async function handleSelect(trainerId) {
@@ -96,6 +106,224 @@ function ClientInbox({ trainer, availableTrainers, onSelectTrainer, messages, ne
         </>
       )}
     </div>
+  );
+}
+
+function ClientDetailsView({
+  selectedClient,
+  dataLoading,
+  clientData,
+  activeTab,
+  setActiveTab,
+  trainerMessage,
+  setTrainerMessage,
+  sendTrainerMessage,
+  sending,
+  currentUserId
+}) {
+  if (!selectedClient) {
+    return (
+      <div className="card">
+        <p className="text-dim">Select a client to view their details.</p>
+      </div>
+    );
+  }
+
+  if (dataLoading) {
+    return (
+      <div className="card">
+        <p>Loading client data...</p>
+      </div>
+    );
+  }
+
+  if (!clientData) return null;
+
+  return (
+    <>
+      {/* Client Header */}
+      <div className="card">
+        <div className="flex-between">
+          <div>
+            <h3>{clientData.profile.full_name}</h3>
+            <p className="text-small text-dim">
+              {clientData.profile.age} years | {clientData.profile.gender} | {clientData.profile.activity_level}
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-small text-dim">Goal</div>
+            <div className="fw-600 text-capitalize">
+              {clientData.profile.primary_goal?.replace("_", " ")}
+            </div>
+          </div>
+        </div>
+
+        {clientData.analysis && (
+          <div className="card-grid grid-auto-180 mt-16">
+            <div>
+              <div className="stat-label">BMI</div>
+              <div className="stat-value">{clientData.analysis.bmi}</div>
+            </div>
+            <div>
+              <div className="stat-label">Target Calories</div>
+              <div className="stat-value">{Math.round(clientData.analysis.target_calories)}</div>
+            </div>
+            <div>
+              <div className="stat-label">Weight</div>
+              <div className="stat-value">{clientData.profile.current_weight_kg}kg</div>
+            </div>
+            <div>
+              <div className="stat-label">Target Weight</div>
+              <div className="stat-value">{clientData.profile.target_weight_kg}kg</div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex-wrap gap-8 mt-16 mb-16">
+        <button
+          className={`btn ${activeTab === "workout" ? "" : "btn-secondary"}`}
+          onClick={() => setActiveTab("workout")}
+        >
+          Workout Plan
+        </button>
+        <button
+          className={`btn ${activeTab === "diet" ? "" : "btn-secondary"}`}
+          onClick={() => setActiveTab("diet")}
+        >
+          Diet Plan
+        </button>
+        <button
+          className={`btn ${activeTab === "message" ? "" : "btn-secondary"}`}
+          onClick={() => setActiveTab("message")}
+        >
+          Message
+        </button>
+      </div>
+
+      {/* Workout Tab */}
+      {activeTab === "workout" && (
+        <div className="card">
+          <h3 className="mb-12">Current Workout Plan</h3>
+          {clientData.workout.days?.length > 0 ? (
+            clientData.workout.days.map((day) => (
+              <div key={day.day_number} className="mb-16">
+                <h4 className="mb-12">Day {day.day_number}</h4>
+                <div className="table-responsive">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Exercise</th>
+                        <th>Muscle</th>
+                        <th>Sets</th>
+                        <th>Reps</th>
+                        <th>Rest</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {day.exercises.map((ex, i) => (
+                        <tr key={i}>
+                          <td>{ex.name}</td>
+                          <td>{ex.muscle_group}</td>
+                          <td>{ex.sets}</td>
+                          <td>{ex.reps}</td>
+                          <td>{ex.rest_seconds}s</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-small text-dim">No workout plan generated yet.</p>
+          )}
+        </div>
+      )}
+
+      {/* Diet Tab */}
+      {activeTab === "diet" && (
+        <div className="card">
+          <h3 className="mb-12">Current Diet Plan</h3>
+          {clientData.diet.meals?.length > 0 ? (
+            <div className="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Meal</th>
+                    <th>Food</th>
+                    <th>Calories</th>
+                    <th>Protein</th>
+                    <th>Carbs</th>
+                    <th>Fat</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clientData.diet.meals.map((meal, i) => (
+                    <tr key={i}>
+                      <td className="text-capitalize">{meal.meal_slot.replace("_", " ")}</td>
+                      <td>{meal.name}</td>
+                      <td>{Math.round(meal.calories)} kcal</td>
+                      <td>{Math.round(meal.protein_g)}g</td>
+                      <td>{Math.round(meal.carbs_g)}g</td>
+                      <td>{Math.round(meal.fat_g)}g</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-small text-dim">No diet plan generated yet.</p>
+          )}
+        </div>
+      )}
+
+      {/* Message Tab */}
+      {activeTab === "message" && (
+        <div className="card">
+          <h3 className="mb-12">Conversation with {selectedClient.full_name}</h3>
+
+          <div className="chat-container mb-16 bg-dim p-8">
+            {clientData.messages?.length === 0 ? (
+              <p className="text-dim text-center">No messages yet with this client.</p>
+            ) : (
+              clientData.messages.map((msg) => {
+                const isFromTrainer = msg.trainer_id === currentUserId;
+                return (
+                  <div
+                    key={msg.id}
+                    className={`chat-message ${isFromTrainer ? "chat-message-user" : "chat-message-assistant"}`}
+                  >
+                    <div>{msg.message}</div>
+                    <div className="chat-message-time">
+                      {new Date(msg.sent_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div className="chat-input-area">
+            <textarea
+              value={trainerMessage}
+              onChange={(e) => setTrainerMessage(e.target.value)}
+              placeholder="Type your message here..."
+              rows={3}
+              className="chat-textarea"
+            />
+            <button
+              className="btn"
+              onClick={sendTrainerMessage}
+              disabled={sending || !trainerMessage.trim()}
+            >
+              {sending ? "Sending..." : "Send Message"}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -340,200 +568,18 @@ export default function TrainerDashboard() {
 
         {/* Client Details */}
         <div className="sidebar-content">
-          {!selectedClient ? (
-            <div className="card">
-              <p className="text-dim">Select a client to view their details.</p>
-            </div>
-          ) : dataLoading ? (
-            <div className="card">
-              <p>Loading client data...</p>
-            </div>
-          ) : clientData ? (
-            <>
-              {/* Client Header */}
-              <div className="card">
-                <div className="flex-between">
-                  <div>
-                    <h3>{clientData.profile.full_name}</h3>
-                    <p className="text-small text-dim">
-                      {clientData.profile.age} years | {clientData.profile.gender} | {clientData.profile.activity_level}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-small text-dim">Goal</div>
-                    <div className="fw-600 text-capitalize">
-                      {clientData.profile.primary_goal?.replace("_", " ")}
-                    </div>
-                  </div>
-                </div>
-
-                {clientData.analysis && (
-                  <div className="card-grid grid-auto-180 mt-16">
-                    <div>
-                      <div className="stat-label">BMI</div>
-                      <div className="stat-value">{clientData.analysis.bmi}</div>
-                    </div>
-                    <div>
-                      <div className="stat-label">Target Calories</div>
-                      <div className="stat-value">{Math.round(clientData.analysis.target_calories)}</div>
-                    </div>
-                    <div>
-                      <div className="stat-label">Weight</div>
-                      <div className="stat-value">{clientData.profile.current_weight_kg}kg</div>
-                    </div>
-                    <div>
-                      <div className="stat-label">Target Weight</div>
-                      <div className="stat-value">{clientData.profile.target_weight_kg}kg</div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Tabs */}
-              <div className="flex-wrap gap-8 mt-16 mb-16">
-                <button
-                  className={`btn ${activeTab === "workout" ? "" : "btn-secondary"}`}
-                  onClick={() => setActiveTab("workout")}
-                >
-                  Workout Plan
-                </button>
-                <button
-                  className={`btn ${activeTab === "diet" ? "" : "btn-secondary"}`}
-                  onClick={() => setActiveTab("diet")}
-                >
-                  Diet Plan
-                </button>
-                <button
-                  className={`btn ${activeTab === "message" ? "" : "btn-secondary"}`}
-                  onClick={() => setActiveTab("message")}
-                >
-                  Message
-                </button>
-              </div>
-
-              {/* Workout Tab */}
-              {activeTab === "workout" && (
-                <div className="card">
-                  <h3 className="mb-12">Current Workout Plan</h3>
-                  {clientData.workout.days?.length > 0 ? (
-                    clientData.workout.days.map((day) => (
-                      <div key={day.day_number} className="mb-16">
-                        <h4 className="mb-12">Day {day.day_number}</h4>
-                        <div className="table-responsive">
-                          <table>
-                            <thead>
-                              <tr>
-                                <th>Exercise</th>
-                                <th>Muscle</th>
-                                <th>Sets</th>
-                                <th>Reps</th>
-                                <th>Rest</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {day.exercises.map((ex, i) => (
-                                <tr key={i}>
-                                  <td>{ex.name}</td>
-                                  <td>{ex.muscle_group}</td>
-                                  <td>{ex.sets}</td>
-                                  <td>{ex.reps}</td>
-                                  <td>{ex.rest_seconds}s</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-small text-dim">No workout plan generated yet.</p>
-                  )}
-                </div>
-              )}
-
-              {/* Diet Tab */}
-              {activeTab === "diet" && (
-                <div className="card">
-                  <h3 className="mb-12">Current Diet Plan</h3>
-                  {clientData.diet.meals?.length > 0 ? (
-                    <div className="table-responsive">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>Meal</th>
-                            <th>Food</th>
-                            <th>Calories</th>
-                            <th>Protein</th>
-                            <th>Carbs</th>
-                            <th>Fat</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {clientData.diet.meals.map((meal, i) => (
-                            <tr key={i}>
-                              <td className="text-capitalize">{meal.meal_slot.replace("_", " ")}</td>
-                              <td>{meal.name}</td>
-                              <td>{Math.round(meal.calories)} kcal</td>
-                              <td>{Math.round(meal.protein_g)}g</td>
-                              <td>{Math.round(meal.carbs_g)}g</td>
-                              <td>{Math.round(meal.fat_g)}g</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="text-small text-dim">No diet plan generated yet.</p>
-                  )}
-                </div>
-              )}
-
-              {/* Message Tab */}
-              {activeTab === "message" && (
-                <div className="card">
-                  <h3 className="mb-12">Conversation with {selectedClient.full_name}</h3>
-
-                  <div className="chat-container mb-16 bg-dim p-8">
-                    {clientData.messages?.length === 0 ? (
-                      <p className="text-dim text-center">No messages yet with this client.</p>
-                    ) : (
-                      clientData.messages.map((msg) => {
-                        const isFromTrainer = msg.trainer_id === currentUserId;
-                        return (
-                          <div
-                            key={msg.id}
-                            className={`chat-message ${isFromTrainer ? "chat-message-user" : "chat-message-assistant"}`}
-                          >
-                            <div>{msg.message}</div>
-                            <div className="chat-message-time">
-                              {new Date(msg.sent_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-
-                  <div className="chat-input-area">
-                    <textarea
-                      value={trainerMessage}
-                      onChange={(e) => setTrainerMessage(e.target.value)}
-                      placeholder="Type your message here..."
-                      rows={3}
-                      className="chat-textarea"
-                    />
-                    <button
-                      className="btn"
-                      onClick={sendTrainerMessage}
-                      disabled={sending || !trainerMessage.trim()}
-                    >
-                      {sending ? "Sending..." : "Send Message"}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
-          ) : null}
+          <ClientDetailsView
+            selectedClient={selectedClient}
+            dataLoading={dataLoading}
+            clientData={clientData}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            trainerMessage={trainerMessage}
+            setTrainerMessage={setTrainerMessage}
+            sendTrainerMessage={sendTrainerMessage}
+            sending={sending}
+            currentUserId={currentUserId}
+          />
         </div>
       </div>
     </div>

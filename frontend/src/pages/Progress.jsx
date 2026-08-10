@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { api } from "../lib/api";
+import { TrendingUp } from "lucide-react";
 
 export default function Progress() {
   const [logs, setLogs] = useState([]);
@@ -14,7 +15,15 @@ export default function Progress() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="page">Loading...</div>;
+  /*if (loading) return <div className="page">Loading...</div>;*/
+  if (loading) {
+    return (
+      <div className="page page-loading">
+        <div className="spinner"></div>
+        <p>Loading analytics and progress...</p>
+      </div>
+    );
+  }
 
   // Format chart data arrays from logs
   const formattedLogs = logs.map((l) => ({
@@ -31,13 +40,16 @@ export default function Progress() {
 
   return (
     <div className="page page-wide">
-      <h2>Progress & Analytics</h2>
+      <div className="section-header">
+        <TrendingUp size={22} />
+        <h2>Progress & Analytics</h2>
+      </div>
       <p className="page-description">
         Track your trends, measurements, and consistency over time.
       </p>
 
       {logs.length === 0 ? (
-        <div className="card"><p>No logs yet — start logging on the Habits page to view your charts.</p></div>
+        <div className="empty-state card"><p>No logs yet — start logging on the Habits page to view your charts.</p></div>
       ) : (
         <div className="flex-column gap-24">
 
@@ -128,7 +140,10 @@ export default function Progress() {
       )}
 
       {/* Weekly Review Summary Section */}
-      <div className="stat-label stat-margin-lg">Weekly performance review</div>
+      {/*<div className="stat-label stat-margin-lg">Weekly performance review</div>*/}
+      <div className="section-header mt-32">
+        <div className="stat-label">Weekly performance review</div>
+      </div>
       {review && review.stats && Object.keys(review.stats).length > 0 ? (
         <div className="card">
           <div className="card-grid">
@@ -140,7 +155,10 @@ export default function Progress() {
           <p className="review-summary">{review.summary}</p>
         </div>
       ) : (
-        <div className="card"><p>Not enough logs yet this week to compile a review.</p></div>
+        <div className="card">
+          <div className="empty-state">
+            <p>Not enough logs yet this week to compile a review.</p></div>
+          </div>
       )}
     </div>
   );

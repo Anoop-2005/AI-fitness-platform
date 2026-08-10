@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../lib/api";
+import { Salad, RefreshCw, X } from "lucide-react";
 
 export default function Diet() {
   const [plan, setPlan] = useState(null);
@@ -26,20 +27,31 @@ export default function Diet() {
     }
   }
 
-  if (loading) return <div className="page">Loading...</div>;
+  /*if (loading) return <div className="page">Loading...</div>;*/
+  if (loading) {
+    return (
+      <div className="page-loading">
+        <div className="spinner" />
+        Loading your diet plan…
+      </div>
+    );
+  }
 
   return (
     <div className="page">
       <div className="flex-between">
-        <h2>Diet plan</h2>
+        <h2 className="title-icon"><Salad size={20} /> Diet plan</h2>
         <button className="btn btn-secondary" onClick={regenerate} disabled={regenerating}>
+          <RefreshCw size={14} className={regenerating ? "spin-icon" : ""} />
           {regenerating ? "Generating..." : "Regenerate"}
         </button>
       </div>
       {error && <div className="error-banner">{error}</div>}
 
       {!plan ? (
-        <div className="card"><p>No plan yet. Click regenerate to create one.</p></div>
+        <div className="card empty-state">
+        <div className="empty-icon">🥗</div>
+        <p>No plan yet. Click regenerate to create one.</p></div>
       ) : (
         <div className="card">
           <table>
@@ -90,7 +102,7 @@ export default function Diet() {
                 onClick={() => setSelectedMeal(null)}
                 className="modal-close"
               >
-                ✕
+                 <X size={18} />
               </button>
             </div>
 

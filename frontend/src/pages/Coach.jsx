@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { api } from "../lib/api";
+import { Bot } from "lucide-react";
 
 const QUICK_PROMPTS = [
   { label: "💪 Motivate me", prompt: "Give me some motivation for today's workout!" },
@@ -50,10 +51,11 @@ export default function Coach() {
 
   return (
     <div className="page page-wide">
-      <div className="flex-between">
-        <h2>🤖 AI Coach</h2>
-        <span className="text-small text-dim">Your virtual personal trainer</span>
+      <div className="section-header">
+        <Bot size={22} />
+        <h2>AI Coach</h2>
       </div>
+      <p className="page-description">Your virtual personal trainer</p>
 
       {/* Quick Prompts */}
       <div className="equipment-grid mb-16">
