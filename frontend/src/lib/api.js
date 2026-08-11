@@ -65,4 +65,31 @@ export const api = {
   // New (matches your backend exactly)
   getAvailableTrainers: () => request("/api/trainer/trainers/available"),
   requestTrainer: (trainerId) => request("/api/trainer/trainers/request", { method: "POST", body: { trainer_id: trainerId } }),
+
+  downloadReport: async (type) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const headers = {};
+    if (session) headers.Authorization = `Bearer ${session.access_token}`;
+
+    const resp = await fetch(`${API_BASE}/api/reports/${type}`, {
+      method: "GET",
+      headers,
+    });
+
+    if (!resp.ok) {
+      const data = await resp.json().catch(() => ({}));
+      throw new Error(data.error || `Request failed (${resp.status})`);
+    }
+
+    const blob = await resp.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${type}_report.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  },
+
 };

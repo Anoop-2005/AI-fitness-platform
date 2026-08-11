@@ -158,7 +158,7 @@ def get_latest_analysis(user=Depends(get_current_user), db=Depends(get_db)):
         profile = cur.fetchone()
         
         if not profile:
-            raise HTTPException(status_status=404, detail="No onboarding profile yet")
+            raise HTTPException(status_code=404, detail="No onboarding profile yet")
 
         # 2. Fetch the latest weight log from 'habit_logs' using user_id and log_date
         cur.execute("""
