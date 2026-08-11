@@ -48,10 +48,10 @@ def get_latest_analysis(db, user_id):
 
 def get_recent_habits(db, user_id, days=14):
     """Fetch recent habit logs for context."""
-    cutoff = date.today() - timedelta(days=days)
+    cutoff = date.today() - timedelta(days=days-1)
     with db.cursor() as cur:
         cur.execute(
-            "SELECT * FROM habit_logs WHERE user_id = %s AND log_date >= %s ORDER BY log_date DESC LIMIT 14",
+            "SELECT * FROM habit_logs WHERE user_id = %s AND log_date >= %s ORDER BY log_date ASC ",
             (user_id, cutoff),
         )
         return cur.fetchall()

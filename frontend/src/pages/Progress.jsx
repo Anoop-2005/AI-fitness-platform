@@ -21,7 +21,7 @@ export default function Progress() {
       //api.getGoalPrediction().catch(() => null), 
       //api.getBodyComposition().catch(() => null), 
     ]) 
-      .then(([l, r, p, g, bc]) => { 
+      .then(([l, r, p]) => { 
         setLogs(l || []); 
         setReview(r); 
         setProfile(p); 

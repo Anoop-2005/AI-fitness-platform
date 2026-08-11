@@ -1,4 +1,4 @@
-"""
+'''"""
 PDF report generation for weekly/monthly progress reports.
 Returns a downloadable PDF file.
 """
@@ -140,4 +140,176 @@ def generate_monthly_report(user=Depends(get_current_user), db=Depends(get_db)):
         io.BytesIO(pdf_output),
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=monthly_report_{today.isoformat()}.pdf"},
+    )'''
+
+"""
+PDF report generation for weekly/monthly progress reports.
+Returns downloadable PDF files.
+"""
+import io
+from datetime import date, timedelta
+
+from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
+
+from db import get_db
+from auth import get_current_user
+
+from services.profile_helpers import (
+    get_profile,
+    get_latest_analysis,
+    get_recent_habits,
+)
+
+from services.report_generator import (
+    build_weekly_report,
+    build_monthly_report,
+)
+
+
+router = APIRouter(
+    prefix="/api/reports",
+    tags=["reports"],
+)
+
+
+# ============================================================
+# WEEKLY REPORT
+# ============================================================
+
+@router.get("/weekly")
+def generate_weekly_report(
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Generate the styled weekly progress report."""
+
+    uid = user["id"]
+
+    today = date.today()
+
+    # --------------------------------------------------------
+    # Fetch data
+    # --------------------------------------------------------
+
+    profile = get_profile(db, uid)
+
+    analysis = get_latest_analysis(
+        db,
+        uid,
+    )
+
+    habits = get_recent_habits(
+        db,
+        uid,
+        days=7,
+    )
+
+    # --------------------------------------------------------
+    # Build styled PDF
+    # --------------------------------------------------------
+
+    pdf_output = build_weekly_report(
+        profile=profile,
+        analysis=analysis,
+        habits=habits,
+        today=today,
+    )
+
+    # --------------------------------------------------------
+    # Return PDF
+    # --------------------------------------------------------
+
+    return StreamingResponse(
+        io.BytesIO(pdf_output),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                f"attachment; "
+                f"filename=weekly_report_{today.isoformat()}.pdf"
+            )
+        },
+    )
+
+
+# ============================================================
+# MONTHLY REPORT
+# ============================================================
+
+@router.get("/monthly")
+def generate_monthly_report(
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Generate the styled monthly progress report."""
+
+    uid = user["id"]
+
+    today = date.today()
+
+    month_start = today - timedelta(days=29)
+
+    # --------------------------------------------------------
+    # Fetch profile + analysis
+    # --------------------------------------------------------
+
+    profile = get_profile(
+        db,
+        uid,
+    )
+
+    analysis = get_latest_analysis(
+        db,
+        uid,
+    )
+
+    # --------------------------------------------------------
+    # Fetch 30 days of habits
+    # --------------------------------------------------------
+
+    with db.cursor() as cur:
+
+        cur.execute(
+            """
+            SELECT *
+            FROM habit_logs
+            WHERE user_id = %s
+              AND log_date >= %s
+              AND log_date <= %s
+            ORDER BY log_date ASC
+            """,
+            (
+                uid,
+                month_start,
+                today,
+            ),
+        )
+
+        habits = cur.fetchall()
+
+    # --------------------------------------------------------
+    # Build styled PDF
+    # --------------------------------------------------------
+
+    pdf_output = build_monthly_report(
+        profile=profile,
+        analysis=analysis,
+        habits=habits,
+        start_date=month_start,
+        today=today,
+    )
+
+    # --------------------------------------------------------
+    # Return PDF
+    # --------------------------------------------------------
+
+    return StreamingResponse(
+        io.BytesIO(pdf_output),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                f"attachment; "
+                f"filename=monthly_report_{today.isoformat()}.pdf"
+            )
+        },
     )

@@ -82,10 +82,20 @@ export const api = {
     }
 
     const blob = await resp.blob();
+    const contentDisposition = resp.headers.get("Content-Disposition");
+    let filename = `${type}_report.pdf`;
+    if (contentDisposition) {
+      const match = contentDisposition.match( /filename="?([^"]+)"?/i );
+
+      if (match && match[1]) {
+      filename = match[1];
+    }
+  }
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${type}_report.pdf`;
+    //a.download = `${type}_report.pdf`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();
