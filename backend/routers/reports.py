@@ -167,15 +167,7 @@ from services.report_generator import (
 )
 
 
-router = APIRouter(
-    prefix="/api/reports",
-    tags=["reports"],
-)
-
-
-# ============================================================
-# WEEKLY REPORT
-# ============================================================
+router = APIRouter(prefix="/api/reports", tags=["reports"],)
 
 @router.get("/weekly")
 def generate_weekly_report(
@@ -185,29 +177,10 @@ def generate_weekly_report(
     """Generate the styled weekly progress report."""
 
     uid = user["id"]
-
     today = date.today()
-
-    # --------------------------------------------------------
-    # Fetch data
-    # --------------------------------------------------------
-
     profile = get_profile(db, uid)
-
-    analysis = get_latest_analysis(
-        db,
-        uid,
-    )
-
-    habits = get_recent_habits(
-        db,
-        uid,
-        days=7,
-    )
-
-    # --------------------------------------------------------
-    # Build styled PDF
-    # --------------------------------------------------------
+    analysis = get_latest_analysis(db,uid,)
+    habits = get_recent_habits(db,uid,days=7,)
 
     pdf_output = build_weekly_report(
         profile=profile,
@@ -215,10 +188,6 @@ def generate_weekly_report(
         habits=habits,
         today=today,
     )
-
-    # --------------------------------------------------------
-    # Return PDF
-    # --------------------------------------------------------
 
     return StreamingResponse(
         io.BytesIO(pdf_output),
@@ -231,11 +200,6 @@ def generate_weekly_report(
         },
     )
 
-
-# ============================================================
-# MONTHLY REPORT
-# ============================================================
-
 @router.get("/monthly")
 def generate_monthly_report(
     user=Depends(get_current_user),
@@ -244,28 +208,10 @@ def generate_monthly_report(
     """Generate the styled monthly progress report."""
 
     uid = user["id"]
-
     today = date.today()
-
     month_start = today - timedelta(days=29)
-
-    # --------------------------------------------------------
-    # Fetch profile + analysis
-    # --------------------------------------------------------
-
-    profile = get_profile(
-        db,
-        uid,
-    )
-
-    analysis = get_latest_analysis(
-        db,
-        uid,
-    )
-
-    # --------------------------------------------------------
-    # Fetch 30 days of habits
-    # --------------------------------------------------------
+    profile = get_profile(db,uid,)
+    analysis = get_latest_analysis(db,uid,)
 
     with db.cursor() as cur:
 
@@ -287,10 +233,6 @@ def generate_monthly_report(
 
         habits = cur.fetchall()
 
-    # --------------------------------------------------------
-    # Build styled PDF
-    # --------------------------------------------------------
-
     pdf_output = build_monthly_report(
         profile=profile,
         analysis=analysis,
@@ -299,9 +241,6 @@ def generate_monthly_report(
         today=today,
     )
 
-    # --------------------------------------------------------
-    # Return PDF
-    # --------------------------------------------------------
 
     return StreamingResponse(
         io.BytesIO(pdf_output),

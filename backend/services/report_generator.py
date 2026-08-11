@@ -13,10 +13,6 @@ from fpdf import FPDF
 from fpdf.fonts import FontFace
 
 
-# ============================================================
-# DESIGN SYSTEM
-# ============================================================
-
 COLORS = {
     "primary": (47, 111, 79),        # #2f6f4f
     "primary_dark": (35, 79, 57),    # #234f39
@@ -41,11 +37,6 @@ COLORS = {
     "green": (16, 185, 129),
 }
 
-
-# ============================================================
-# HELPER FUNCTIONS
-# ============================================================
-
 def safe_number(value, default=0):
     """Safely convert a database value to a number."""
     if value is None:
@@ -55,7 +46,6 @@ def safe_number(value, default=0):
         return float(value)
     except (TypeError, ValueError):
         return default
-
 
 def format_number(value, decimals=1):
     """Format numeric values nicely."""
@@ -109,10 +99,7 @@ def get_value(row: Any, key: str, default=None):
         return getattr(row, key, default)
 
 
-# ============================================================
 # PDF CLASS
-# ============================================================
-
 class FitnessReportPDF(FPDF):
 
     def __init__(self, report_type="Weekly"):
@@ -124,23 +111,11 @@ class FitnessReportPDF(FPDF):
 
         self.report_type = report_type
 
-        self.set_margins(
-            left=12,
-            top=18,
-            right=12,
-        )
-
-        self.set_auto_page_break(
-            auto=True,
-            margin=18,
-        )
-
+        self.set_margins(left=12, top=18, right=12,)
+        self.set_auto_page_break(auto=True, margin=18,)
         self.alias_nb_pages()
 
-    # --------------------------------------------------------
     # HEADER
-    # --------------------------------------------------------
-
     def header(self):
         """
         Automatically called at the top of every page.
@@ -148,46 +123,19 @@ class FitnessReportPDF(FPDF):
 
         # Green top bar
         self.set_fill_color(*COLORS["primary"])
-        self.rect(
-            0,
-            0,
-            self.w,
-            5,
-            style="F",
-        )
-
-        self.set_font(
-            "Helvetica",
-            "B",
-            9,
-        )
-
+        self.rect(0,0,self.w, 5,style="F",)
+        self.set_font("Helvetica", "B", 9,)
         self.set_text_color(*COLORS["primary"])
-
-        self.cell(
-            0,
-            6,
-            "AI FITNESS PLATFORM",
-            new_x="LMARGIN",
-            new_y="NEXT",
-        )
+        self.cell(0, 6, "AI FITNESS PLATFORM", new_x="LMARGIN",new_y="NEXT",)
 
         self.set_draw_color(*COLORS["border"])
         self.set_line_width(0.3)
 
-        self.line(
-            self.l_margin,
-            self.get_y(),
-            self.w - self.r_margin,
-            self.get_y(),
-        )
-
+        self.line( self.l_margin, self.get_y(), self.w - self.r_margin, self.get_y(),)
         self.ln(4)
 
-    # --------------------------------------------------------
+    
     # FOOTER
-    # --------------------------------------------------------
-
     def footer(self):
         """
         Automatically called at the bottom of every page.
@@ -198,35 +146,18 @@ class FitnessReportPDF(FPDF):
         self.set_draw_color(*COLORS["border"])
         self.set_line_width(0.3)
 
-        self.line(
-            self.l_margin,
-            self.get_y(),
-            self.w - self.r_margin,
-            self.get_y(),
-        )
-
+        self.line(self.l_margin,self.get_y(),self.w - self.r_margin,self.get_y(),)
         self.ln(2)
-
-        self.set_font(
-            "Helvetica",
-            "",
-            8,
-        )
-
+        self.set_font("Helvetica","",8,)
         self.set_text_color(*COLORS["muted"])
-
-        self.cell(
-            0,
-            6,
+        self.cell(0,6,
             f"{self.report_type} Progress Report    "
             f"Page {self.page_no()}/{{nb}}",
             align="C",
         )
 
-    # ========================================================
+    
     # TITLE
-    # ========================================================
-
     def report_title(
         self,
         title: str,
