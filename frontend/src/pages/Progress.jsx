@@ -214,7 +214,7 @@ export default function Progress() {
                 <BarChart data={aggregatedData}>
                   <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
                   <XAxis dataKey="date" fontSize={12} stroke={chartColors.text} />
-                  <YAxis dataKey="data "fontSize={12} stroke={chartColors.text} />
+                  <YAxis domain={[0, "auto"]} fontSize={12} stroke={chartColors.text} />
                   <Tooltip contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155", color: "#fff" }} />
                   <Legend />
                   <Bar dataKey="avgCalories" fill={chartColors.warning} name="Averge Consumed (kcal)" />

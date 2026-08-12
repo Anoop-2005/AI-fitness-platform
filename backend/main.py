@@ -13,6 +13,7 @@ app.add_middleware(
     allow_origins=["https://ai-fitness-platform-pka9.onrender.com", "https://ai-fitness-platform.pages.dev", "http://localhost:5173"],  
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
 )
 
 
