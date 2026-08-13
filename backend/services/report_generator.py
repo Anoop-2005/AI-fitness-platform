@@ -205,7 +205,7 @@ class FitnessReportPDF(FPDF):
             text_align=("LEFT", "LEFT"),
             headings_style=heading_style,
             cell_fill_color=COLORS["background"],
-            cell_fill_mode="ROWS",
+            cell_fill_mode="ALL",
             line_height=4.5,
             padding=1.5,
             borders_layout="INTERNAL",
