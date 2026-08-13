@@ -61,7 +61,7 @@ def list_photos(
         return cur.fetchall()
 
 
-@router.get("/latest")
+'''@router.get("/latest")
 def get_latest_photos(user=Depends(get_current_user), db=Depends(get_db)):
     """Get the most recent photo for each view type."""
     with db.cursor() as cur:
@@ -72,7 +72,7 @@ def get_latest_photos(user=Depends(get_current_user), db=Depends(get_db)):
             ORDER BY view_type, uploaded_at DESC
         """, (user["id"],))
         return cur.fetchall()
-
+'''
 
 @router.delete("/{photo_id}")
 def delete_photo(

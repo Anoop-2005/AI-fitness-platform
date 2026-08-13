@@ -36,13 +36,13 @@ export const api = {
   coachChat: (message) => request("/api/coach/chat", { method: "POST", body: { message } }),
   uploadPhoto: (viewType, imageData) => request("/api/photos/upload", { method: "POST", body: { view_type: viewType, image_data: imageData },}),
   listPhotos: (viewType) => request(`/api/photos/list${viewType ? `?view_type=${viewType}` : ""}`),
-  getLatestPhotos: () => request("/api/photos/latest"),
+  //getLatestPhotos: () => request("/api/photos/latest"),
   deletePhoto: (photoId) => request(`/api/photos/${photoId}`, { method: "DELETE" }),
 
   // Admin API
   adminListTrainers: () => request("/api/admin/trainers"),
   adminListClients: () => request("/api/admin/clients"),
-  adminListUsers: (role) => request(`/api/admin/users${role ? `?role=${role}` : ""}`),
+  //adminListUsers: (role) => request(`/api/admin/users${role ? `?role=${role}` : ""}`),
   adminStats: () => request("/api/admin/stats"),
   adminDeleteUser: (userId) => request(`/api/admin/users/${userId}`, { method: "DELETE" }),
 

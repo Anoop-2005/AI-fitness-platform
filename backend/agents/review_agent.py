@@ -57,6 +57,7 @@ def aggregate_week(logs: list[dict]) -> dict:
     total_steps = 0
     total_calories = 0.0
     total_protein = 0.0
+    total_calories_burned = 0.0
 
     for l in sorted_logs:
         if isinstance(l, dict):
@@ -73,6 +74,7 @@ def aggregate_week(logs: list[dict]) -> dict:
             total_steps += int(l.get("steps", 0) or 0)
             total_calories += float(l.get("calories_consumed", 0) or 0)
             total_protein += float(l.get("protein_g", 0) or 0)
+            total_calories_burned += float(l.get("calories_burned", 0) or 0)
 
             w = l.get("weight_kg")
             if w is not None:
@@ -92,6 +94,7 @@ def aggregate_week(logs: list[dict]) -> dict:
         "weight_change_kg": round(weights[-1] - weights[0], 2) if len(weights) >= 2 else 0,
         "waist_change_cm": round(waists[-1] - waists[0], 1) if len(waists) >= 2 else 0,
         "plateau_detected": detect_plateau(weights) if weights else False,
+        "total_calories_burned": round(total_calories_burned),
     }
 
 def _aggregate_node(state: ReviewState) -> dict:

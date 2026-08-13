@@ -200,6 +200,13 @@ function ClientDetailsView({
         >
           Message
         </button>
+
+        <button
+          className={`btn ${activeTab === "progress" ? "" : "btn-secondary"}`}
+          onClick={() => setActiveTab("progress")}
+        >
+          Progress
+        </button>
       </div>
 
       {/* Workout Tab */}
@@ -275,6 +282,43 @@ function ClientDetailsView({
             </div>
           ) : (
             <p className="text-small text-dim">No diet plan generated yet.</p>
+          )}
+        </div>
+      )}
+
+      {/* Progress Tab */}
+      {activeTab === "progress" && (
+        <div className="card">
+          <h3 className="mb-12">Recent Progress (last 30 days)</h3>
+          {clientData.progress?.length > 0 ? (
+            <div className="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Weight</th>
+                    <th>Steps</th>
+                    <th>Water</th>
+                    <th>Sleep</th>
+                    <th>Workout</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clientData.progress.map((log) => (
+                    <tr key={log.id}>
+                      <td>{log.log_date}</td>
+                      <td>{log.weight_kg ? `${log.weight_kg}kg` : "—"}</td>
+                      <td>{log.steps ?? "—"}</td>
+                      <td>{log.water_l ? `${log.water_l}L` : "—"}</td>
+                      <td>{log.sleep_hours ? `${log.sleep_hours}h` : "—"}</td>
+                      <td>{log.workout_done ? "✅" : "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-small text-dim">No logs yet for this client.</p>
           )}
         </div>
       )}
@@ -401,12 +445,13 @@ export default function TrainerDashboard() {
     setDataLoading(true);
     setActiveTab("workout");
     try {
-      const [profile, workout, diet, analysis, messages] = await Promise.all([
+      const [profile, workout, diet, analysis, messages, progress] = await Promise.all([
         api.trainerGetClientProfile(client.user_id),
         api.trainerGetClientWorkout(client.user_id),
         api.trainerGetClientDiet(client.user_id),
         api.trainerGetClientAnalysis(client.user_id).catch(() => null),
         api.trainerGetMessages(client.user_id).catch(() => []),
+        api.trainerGetClientProgress(client.user_id).catch(() => []),
       ]);
       setClientData({ profile, workout, diet, analysis, messages });
     } catch (err) {
