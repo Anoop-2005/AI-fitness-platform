@@ -3,7 +3,7 @@ from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from routers import onboarding, plans, habits, sync, coach, photos, admin, trainer, reports
+from routers import onboarding, plans, habits, sync, coach, photos, admin, trainer, reports, goal, body_composition
 from services.llm_client import MOCK_MODE
 
 app = FastAPI(title="Iron Ledger", version="1.0.0")
@@ -29,11 +29,6 @@ async def validation_exception_handler(request, exc: RequestValidationError):
     return JSONResponse(status_code=422, content={"error": "Invalid request", "detail": exc.errors()})
 
 
-# Catch-all: any exception we didn't anticipate (a database constraint
-# violation, a bug, etc.) still comes back as JSON the frontend can parse,
-# instead of a plain-text 500 that would break `await resp.json()` there.
-# The real error is logged server-side for debugging; the client only sees
-# a generic message.
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request, exc: Exception):
     import traceback
@@ -50,6 +45,8 @@ app.include_router(photos.router)
 app.include_router(admin.router)
 app.include_router(trainer.router)
 app.include_router(reports.router)
+app.include_router(body_composition.router)
+app.include_router(goal.router)
 
 
 @app.get("/health")

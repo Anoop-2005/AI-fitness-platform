@@ -6,7 +6,7 @@ from typing import TypedDict
 
 from langgraph.graph import StateGraph, END
 
-from services.llm_client import chat
+from services.llm_client import chat, LLMUnavailableError
 
 
 class ReviewState(TypedDict):
@@ -43,46 +43,46 @@ def detect_plateau(weight_series: list[float]) -> bool:
 def aggregate_week(logs: list[dict]) -> dict:
     if not logs:
         return {}
-    n = len(logs)
+    
+    # Sort logs chronologically (oldest first) so changes calculate correctly
+    sorted_logs = sorted(logs, key=lambda x: x.get("log_date", ""))
+    n = len(sorted_logs)
     
     weights = []
-    for l in logs:
-        # Handle both dictionary access and tuple access safely
-        if isinstance(l, dict):
-            w = l.get("weight_kg")
-        else:
-            # If it's a tuple, find weight_kg based on table column order or safe extraction
-            # Assuming weight_kg is in the row, or we fallback safely. 
-            # Better yet, ensure your db connection uses RealDictCursor.
-            try:
-                w = l[logs[0].keys().index("weight_kg")] if hasattr(logs[0], "keys") else None
-            except Exception:
-                w = None
-        if w is not None:
-            weights.append(float(w))
-
-    # Helper lambda to safely extract values whether row is dict or tuple
-    def get_val(row, key, default=0):
-        if isinstance(row, dict):
-            return row.get(key, default)
-        return default # Fallback if purely tuple-based without column names
-
-    # Safely compute metrics handling both dicts and objects/tuples
+    waists = []
+    
     workout_done_count = 0
     total_water = 0.0
     total_sleep = 0.0
     total_steps = 0
     total_calories = 0.0
     total_protein = 0.0
+    total_calories_burned = 0.0
 
-    for l in logs:
+    for l in sorted_logs:
         if isinstance(l, dict):
-            if l.get("workout_done"): workout_done_count += 1
+            if l.get("workout_done"): 
+                workout_done_count += 1
+            
+            # Safely parse numeric fields, handling potential strings or bad input
             total_water += float(l.get("water_l", 0) or 0)
-            total_sleep += float(l.get("sleep_hours", 0) or 0)
+            
+            # Clean up negative or erroneous sleep data if necessary
+            sleep = float(l.get("sleep_hours", 0) or 0)
+            total_sleep += max(0.0, sleep) 
+            
             total_steps += int(l.get("steps", 0) or 0)
             total_calories += float(l.get("calories_consumed", 0) or 0)
             total_protein += float(l.get("protein_g", 0) or 0)
+            total_calories_burned += float(l.get("calories_burned", 0) or 0)
+
+            w = l.get("weight_kg")
+            if w is not None:
+                weights.append(float(w))
+
+            waist = l.get("waist_cm")
+            if waist is not None:
+                waists.append(float(waist))
 
     return {
         "workout_completion_pct": round(workout_done_count / n * 100, 1) if n > 0 else 0,
@@ -92,7 +92,9 @@ def aggregate_week(logs: list[dict]) -> dict:
         "avg_calories_consumed": round(total_calories / n) if n > 0 else 0,
         "avg_protein_g": round(total_protein / n, 1) if n > 0 else 0,
         "weight_change_kg": round(weights[-1] - weights[0], 2) if len(weights) >= 2 else 0,
+        "waist_change_cm": round(waists[-1] - waists[0], 1) if len(waists) >= 2 else 0,
         "plateau_detected": detect_plateau(weights) if weights else False,
+        "total_calories_burned": round(total_calories_burned),
     }
 
 def _aggregate_node(state: ReviewState) -> dict:
@@ -102,12 +104,44 @@ def _aggregate_node(state: ReviewState) -> dict:
 def _narrate_node(state: ReviewState) -> dict:
     if not state["stats"]:
         return {"summary": "No logs yet this week — start tracking to see a review."}
-    summary = chat(
-        f"Write a short, supportive 3-sentence weekly review using ONLY these numbers, "
-        f"don't invent anything not listed here: {state['stats']}. "
-        f"If plateau_detected is true, gently mention it."
-    )
+
+    stats = state["stats"]
+    allowed_fields = ", ".join(stats.keys())
+
+    try:
+        summary = chat(
+            f"Here is a user's weekly fitness data as a JSON object: {stats}\n\n"
+            f"Write a short, supportive 3-sentence weekly review using ONLY the values in this JSON. "
+            f"The ONLY fields that exist are: {allowed_fields}. "
+            f"Do NOT mention diet adherence, calorie targets, percentage deviations, or any other "
+            f"metric that is not one of these exact fields. "
+            f"If plateau_detected is true, gently mention it."
+        )
+        # Safety net: if the model invents a metric we know doesn't exist in the
+        # data, don't show it to the user — fall back to a plain, guaranteed-accurate
+        # summary built directly from the real numbers instead.
+        banned_phrases = ["diet adherence", "adherence", "target calories", "deviation"]
+        if any(phrase in summary.lower() for phrase in banned_phrases):
+            summary = _fallback_summary(stats)
+    except LLMUnavailableError:
+        # AI is down/rate-limited — never save a raw error as the summary.
+        summary = _fallback_summary(stats)
+
     return {"summary": summary}
+
+
+def _fallback_summary(stats: dict) -> str:
+    """Deterministic, always-accurate summary built only from real stats.
+    Used when the AI's output can't be trusted."""
+    parts = [f"You completed {stats.get('workout_completion_pct', 0)}% of your workouts this week."]
+    if stats.get("avg_water_l"):
+        parts.append(f"Average water intake was {stats['avg_water_l']}L per day.")
+    if stats.get("weight_change_kg"):
+        direction = "lost" if stats["weight_change_kg"] < 0 else "gained"
+        parts.append(f"You {direction} {abs(stats['weight_change_kg'])}kg this week.")
+    if stats.get("plateau_detected"):
+        parts.append("Your progress may be plateauing — worth reviewing your plan.")
+    return " ".join(parts)
 
 
 def build_review_graph():

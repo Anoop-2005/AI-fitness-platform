@@ -18,15 +18,15 @@ export default function Progress() {
       api.getHabits(90), 
       api.getWeeklyReview().catch(() => null), 
       api.getProfile().catch(() => null), 
-      //api.getGoalPrediction().catch(() => null), 
-      //api.getBodyComposition().catch(() => null), 
+      api.getGoalPrediction().catch(() => null), 
+      api.getBodyComposition().catch(() => null), 
     ]) 
-      .then(([l, r, p]) => { 
+      .then(([l, r, p,g, bc]) => { 
         setLogs(l || []); 
         setReview(r); 
         setProfile(p); 
-        //setGoalPrediction(g); 
-        //setBodyComp(bc); 
+        setGoalPrediction(g); 
+        setBodyComp(bc); 
       }) 
       .finally(() => setLoading(false)); 
     }, []);
@@ -307,8 +307,69 @@ export default function Progress() {
                     </div> 
                   )} 
                 </div> 
-              </> )} 
-              */} 
+              </> )} */}
+      
+      {goalPrediction && !goalPrediction.error && ( 
+  <> 
+    <div className="stat-label stat-margin-lg"> 
+      Goal prediction 
+    </div> 
+  
+    <div className="card"> 
+      {/* Optional Subtitle / Progress Context */}
+      <div className="text-small text-dim mb-12">
+        Current: <strong>{goalPrediction.current_weight_kg} kg</strong> &bull; 
+        Target: <strong>{goalPrediction.target_weight_kg} kg</strong> &bull; 
+        Remaining: <strong>{goalPrediction.weight_diff_kg} kg</strong>
+      </div>
+
+      <div className="card-grid grid-auto-180"> 
+        <div> 
+          <div className="stat-label">Achievement</div> 
+          <div className="stat-value stat-value-accent"> 
+            {goalPrediction.goal_achievement_pct || 0}% 
+          </div> 
+        </div> 
+
+        <div> 
+          <div className="stat-label">Weekly change</div> 
+          <div className="stat-value"> 
+            {goalPrediction.weekly_weight_change_kg > 0 ? "+" : ""} 
+            {goalPrediction.weekly_weight_change_kg}kg 
+          </div> 
+        </div> 
+        
+        <div> 
+          <div className="stat-label">Monthly projection</div> 
+          <div className="stat-value"> 
+            {goalPrediction.monthly_projection_kg > 0 ? "+" : ""} 
+            {goalPrediction.monthly_projection_kg}kg 
+          </div> 
+        </div> 
+        
+        <div> 
+          <div className="stat-label">Est. completion</div> 
+          <div className="stat-value text-1-3"> 
+            {goalPrediction.predicted_completion_date || "—"} 
+          </div> 
+          {/* Using weeks_remaining here as helpful subtext */}
+          {goalPrediction.weeks_remaining > 0 && (
+            <div className="text-mini text-dim mt-4">
+              (~{goalPrediction.weeks_remaining} weeks left)
+            </div>
+          )}
+        </div> 
+      </div> 
+      
+      {goalPrediction.plateau_detected && ( 
+        <div className="error-banner error-banner-margin"> 
+          Plateau detected — your plan will adjust to break through. 
+        </div> 
+      )} 
+    </div> 
+  </> 
+)}
+               
               
       {/* Body Composition Insights 
       {bodyComp && bodyComp.insights && bodyComp.insights.length > 0 && ( 
@@ -324,8 +385,24 @@ export default function Progress() {
           <p className="text-mini text-dim mt-12"> ⚠️ {bodyComp.disclaimer} </p> 
         </div> 
         </> 
-      )} 
-      */} 
+      )} */}
+
+      {bodyComp?.insights?.length > 0 && (
+  <> 
+    <div className="stat-label stat-margin-lg">Body composition insights</div> 
+    <div className="card"> 
+      <div className="flex-column gap-12"> 
+        {bodyComp.insights.map((insight, i) => ( 
+          <div key={i} className="text-small">
+            <strong>{insight.note}</strong> 
+          </div> 
+        ))} 
+      </div> 
+      <p className="text-mini text-dim mt-12">⚠️ {bodyComp.disclaimer}</p> 
+    </div> 
+  </>
+)}
+       
       
       {/* Weekly Review Summary Section */}
       {/*<div className="stat-label stat-margin-lg">Weekly performance review</div>*/}
