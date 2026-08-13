@@ -238,6 +238,8 @@ from auth import get_current_user
 from agents.workout_planner import generate_workout_plan
 from agents.diet_planner import generate_diet_plan
 from agents.review_agent import generate_weekly_review, aggregate_week
+import psycopg
+from psycopg.rows import dict_row
 
 router = APIRouter(prefix="/api", tags=["plans"])
 
@@ -293,7 +295,8 @@ def weekly_review(user=Depends(get_current_user), db=Depends(get_db)):
     today = date.today()
     week_start = today - timedelta(days=6)  # Covers exactly 7 days including today
 
-    with db.cursor() as cur:
+    # Psycopg 3 uses row_factory=dict_row on the connection or cursor context
+    with db.cursor(row_factory=dict_row) as cur:
         cur.execute("""
             SELECT * FROM weekly_reviews 
             WHERE user_id = %s AND week_start = %s 
@@ -307,13 +310,14 @@ def weekly_review(user=Depends(get_current_user), db=Depends(get_db)):
         cur.execute("""
             SELECT * FROM habit_logs 
             WHERE user_id = %s AND log_date >= %s AND log_date <= %s
-            ORDER BY log_date
+            ORDER BY log_date ASC
         """, (uid, week_start, today))
         logs = cur.fetchall()
 
     review = generate_weekly_review(logs)
 
-    with db.cursor() as cur:
+    
+    with db.cursor(row_factory=dict_row) as cur:
         cur.execute("""
             INSERT INTO weekly_reviews (user_id, week_start, stats, plateau_detected, summary)
             VALUES (%s, %s, %s, %s, %s) 
@@ -326,6 +330,7 @@ def weekly_review(user=Depends(get_current_user), db=Depends(get_db)):
             review["summary"]
         ))
         saved_row = cur.fetchone()
+        db.commit()
 
     return saved_row
 
