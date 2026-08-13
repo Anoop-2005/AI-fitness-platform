@@ -6,7 +6,7 @@ from typing import TypedDict
 
 from langgraph.graph import StateGraph, END
 
-from services.llm_client import chat
+from services.llm_client import chat, LLMUnavailableError
 
 
 class ReviewState(TypedDict):
@@ -101,12 +101,44 @@ def _aggregate_node(state: ReviewState) -> dict:
 def _narrate_node(state: ReviewState) -> dict:
     if not state["stats"]:
         return {"summary": "No logs yet this week — start tracking to see a review."}
-    summary = chat(
-        f"Write a short, supportive 3-sentence weekly review using ONLY these numbers, "
-        f"don't invent anything not listed here: {state['stats']}. "
-        f"If plateau_detected is true, gently mention it."
-    )
+
+    stats = state["stats"]
+    allowed_fields = ", ".join(stats.keys())
+
+    try:
+        summary = chat(
+            f"Here is a user's weekly fitness data as a JSON object: {stats}\n\n"
+            f"Write a short, supportive 3-sentence weekly review using ONLY the values in this JSON. "
+            f"The ONLY fields that exist are: {allowed_fields}. "
+            f"Do NOT mention diet adherence, calorie targets, percentage deviations, or any other "
+            f"metric that is not one of these exact fields. "
+            f"If plateau_detected is true, gently mention it."
+        )
+        # Safety net: if the model invents a metric we know doesn't exist in the
+        # data, don't show it to the user — fall back to a plain, guaranteed-accurate
+        # summary built directly from the real numbers instead.
+        banned_phrases = ["diet adherence", "adherence", "target calories", "deviation"]
+        if any(phrase in summary.lower() for phrase in banned_phrases):
+            summary = _fallback_summary(stats)
+    except LLMUnavailableError:
+        # AI is down/rate-limited — never save a raw error as the summary.
+        summary = _fallback_summary(stats)
+
     return {"summary": summary}
+
+
+def _fallback_summary(stats: dict) -> str:
+    """Deterministic, always-accurate summary built only from real stats.
+    Used when the AI's output can't be trusted."""
+    parts = [f"You completed {stats.get('workout_completion_pct', 0)}% of your workouts this week."]
+    if stats.get("avg_water_l"):
+        parts.append(f"Average water intake was {stats['avg_water_l']}L per day.")
+    if stats.get("weight_change_kg"):
+        direction = "lost" if stats["weight_change_kg"] < 0 else "gained"
+        parts.append(f"You {direction} {abs(stats['weight_change_kg'])}kg this week.")
+    if stats.get("plateau_detected"):
+        parts.append("Your progress may be plateauing — worth reviewing your plan.")
+    return " ".join(parts)
 
 
 def build_review_graph():

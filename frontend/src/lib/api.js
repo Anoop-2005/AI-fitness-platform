@@ -26,7 +26,8 @@ export const api = {
   getWorkoutPlan: () => request("/api/plans/workout/latest"),
   generateDietPlan: () => request("/api/plans/diet", { method: "POST" }),
   getDietPlan: () => request("/api/plans/diet/latest"),
-  getWeeklyReview: () => request("/api/review/weekly"),
+  //getWeeklyReview: () => request("/api/review/weekly"),
+  getWeeklyReview: () => request("/api/review/weekly", { method: "POST" }),
 
   logHabit: (payload) => request("/api/habits", { method: "POST", body: payload }),
   getHabits: (days = 30) => request(`/api/habits?days=${days}`),

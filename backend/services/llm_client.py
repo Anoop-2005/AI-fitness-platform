@@ -1,15 +1,10 @@
-"""
-Talks to Groq or Gemini via LangChain's chat model wrappers. Both are free-
-tier providers; whichever API key is set in .env is used (Groq preferred
-if both are set, since it's faster).
-
-If no API key is set, `chat()` returns a clearly-labeled placeholder so the
-rest of the app still works end to end with zero signup.
-"""
 from config import GROQ_API_KEY, GOOGLE_API_KEY
 
 MOCK_MODE = not (GROQ_API_KEY or GOOGLE_API_KEY)
 
+class LLMUnavailableError(Exception):
+    """Raised when the AI provider can't be reached (rate limit, network, etc)."""
+    pass
 
 def _get_llm():
     if GROQ_API_KEY:
@@ -29,4 +24,5 @@ def chat(prompt: str) -> str:
         response = llm.invoke(prompt)
         return response.content
     except Exception as e:
-        return f"[Could not reach the AI provider right now: {e}]"
+        raise LLMUnavailableError(str(e)) from e
+        #return f"[Could not reach the AI provider right now: {e}]"
