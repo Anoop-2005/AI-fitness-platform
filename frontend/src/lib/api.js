@@ -101,5 +101,9 @@ export const api = {
     a.remove();
     window.URL.revokeObjectURL(url);
   },
+  //body compisition 
+  getBodyComposition: () => request("/api/body-composition/insights"),
+  // Goal prediction
+  getGoalPrediction: () => request("/api/goal/prediction"),
 
 };

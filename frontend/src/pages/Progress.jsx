@@ -18,15 +18,15 @@ export default function Progress() {
       api.getHabits(90), 
       api.getWeeklyReview().catch(() => null), 
       api.getProfile().catch(() => null), 
-      //api.getGoalPrediction().catch(() => null), 
-      //api.getBodyComposition().catch(() => null), 
+      api.getGoalPrediction().catch(() => null), 
+      api.getBodyComposition().catch(() => null), 
     ]) 
-      .then(([l, r, p]) => { 
+      .then(([l, r, p,g, bc]) => { 
         setLogs(l || []); 
         setReview(r); 
         setProfile(p); 
-        //setGoalPrediction(g); 
-        //setBodyComp(bc); 
+        setGoalPrediction(g); 
+        setBodyComp(bc); 
       }) 
       .finally(() => setLoading(false)); 
     }, []);
@@ -261,7 +261,7 @@ export default function Progress() {
       )}
 
 
-      {/* Goal Prediction 
+      {/* Goal Prediction */}
       {goalPrediction && !goalPrediction.error && ( 
         <> 
           <div className="stat-label stat-margin-lg"> 
@@ -308,9 +308,9 @@ export default function Progress() {
                   )} 
                 </div> 
               </> )} 
-              */} 
+               
               
-      {/* Body Composition Insights 
+      {/* Body Composition Insights */}
       {bodyComp && bodyComp.insights && bodyComp.insights.length > 0 && ( 
         <> 
         <div className="stat-label stat-margin-lg"> Body composition insights </div> 
@@ -325,7 +325,7 @@ export default function Progress() {
         </div> 
         </> 
       )} 
-      */} 
+       
       
       {/* Weekly Review Summary Section */}
       {/*<div className="stat-label stat-margin-lg">Weekly performance review</div>*/}
