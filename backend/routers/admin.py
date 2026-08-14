@@ -127,3 +127,136 @@ def get_stats(user=Depends(require_admin), db=Depends(get_db)):
         "total_users": total_users,
         "recent_logs": recent_logs,
     }
+
+# --- Exercise Library Management ---
+
+@router.get("/exercises")
+def admin_list_exercises(
+    search: Optional[str] = None,
+    muscle_group: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+    user=Depends(require_admin),
+    db=Depends(get_db)
+):
+    """List exercises with optional filtering."""
+    query = "SELECT * FROM exercises_cache WHERE 1=1"
+    params = []
+
+    if search:
+        query += " AND name ILIKE %s"
+        params.append(f"%{search}%")
+    if muscle_group:
+        query += " AND muscle_group ILIKE %s"
+        params.append(f"%{muscle_group}%")
+
+    query += " ORDER BY name LIMIT %s OFFSET %s"
+    params.extend([limit, offset])
+
+    with db.cursor() as cur:
+        cur.execute(query, params)
+        return cur.fetchall()
+
+
+@router.put("/exercises/{wger_id}")
+def admin_update_exercise(
+    wger_id: int,
+    body: dict,
+    user=Depends(require_admin),
+    db=Depends(get_db)
+):
+    """Update an exercise in the library."""
+    allowed_fields = ["name", "muscle_group", "instructions", "image_url", "difficulty"]
+    updates = {k: v for k, v in body.items() if k in allowed_fields}
+
+    if not updates:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+
+    set_clause = ", ".join([f"{k} = %s" for k in updates.keys()])
+    values = list(updates.values()) + [wger_id]
+
+    with db.cursor() as cur:
+        cur.execute(f"UPDATE exercises_cache SET {set_clause} WHERE wger_id = %s RETURNING *", values)
+        row = cur.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Exercise not found")
+    return row
+
+
+@router.delete("/exercises/{wger_id}")
+def admin_delete_exercise(
+    wger_id: int,
+    user=Depends(require_admin),
+    db=Depends(get_db)
+):
+    """Delete an exercise from the library."""
+    with db.cursor() as cur:
+        cur.execute("DELETE FROM exercises_cache WHERE wger_id = %s RETURNING wger_id", (wger_id,))
+        if not cur.fetchone():
+            raise HTTPException(status_code=404, detail="Exercise not found")
+    return {"success": True}
+
+
+# --- Food Library Management ---
+
+@router.get("/foods")
+def admin_list_foods(
+    search: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+    user=Depends(require_admin),
+    db=Depends(get_db)
+):
+    """List foods with optional filtering."""
+    query = "SELECT * FROM foods_cache WHERE 1=1"
+    params = []
+
+    if search:
+        query += " AND name ILIKE %s"
+        params.append(f"%{search}%")
+
+    query += " ORDER BY name LIMIT %s OFFSET %s"
+    params.extend([limit, offset])
+
+    with db.cursor() as cur:
+        cur.execute(query, params)
+        return cur.fetchall()
+
+
+@router.put("/foods/{fdc_id}")
+def admin_update_food(
+    fdc_id: str,
+    body: dict,
+    user=Depends(require_admin),
+    db=Depends(get_db)
+):
+    """Update a food in the library."""
+    allowed_fields = ["name", "calories", "protein_g", "carbs_g", "fat_g", "fiber_g", "serving_size"]
+    updates = {k: v for k, v in body.items() if k in allowed_fields}
+
+    if not updates:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+
+    set_clause = ", ".join([f"{k} = %s" for k in updates.keys()])
+    values = list(updates.values()) + [fdc_id]
+
+    with db.cursor() as cur:
+        cur.execute(f"UPDATE foods_cache SET {set_clause} WHERE fdc_id = %s RETURNING *", values)
+        row = cur.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Food not found")
+    return row
+
+
+@router.delete("/foods/{fdc_id}")
+def admin_delete_food(
+    fdc_id: str,
+    user=Depends(require_admin),
+    db=Depends(get_db)
+):
+    """Delete a food from the library."""
+    with db.cursor() as cur:
+        cur.execute("DELETE FROM foods_cache WHERE fdc_id = %s RETURNING fdc_id", (fdc_id,))
+        if not cur.fetchone():
+            raise HTTPException(status_code=404, detail="Food not found")
+    return {"success": True}

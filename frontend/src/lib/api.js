@@ -45,6 +45,13 @@ export const api = {
   //adminListUsers: (role) => request(`/api/admin/users${role ? `?role=${role}` : ""}`),
   adminStats: () => request("/api/admin/stats"),
   adminDeleteUser: (userId) => request(`/api/admin/users/${userId}`, { method: "DELETE" }),
+  adminListExercises: (search) => request(`/api/admin/exercises${search ? `?search=${encodeURIComponent(search)}` : ""}`),
+  adminUpdateExercise: (wgerId, body) => request(`/api/admin/exercises/${wgerId}`, { method: "PUT", body }),
+  adminDeleteExercise: (wgerId) => request(`/api/admin/exercises/${wgerId}`, { method: "DELETE" }),
+  adminListFoods: (search) => request(`/api/admin/foods${search ? `?search=${encodeURIComponent(search)}` : ""}`),
+  adminUpdateFood: (fdcId, body) => request(`/api/admin/foods/${fdcId}`, { method: "PUT", body }),
+  adminDeleteFood: (fdcId) => request(`/api/admin/foods/${fdcId}`, { method: "DELETE" }),
+
 
   // Trainer API
   trainerGetClients: () => request("/api/trainer/clients"),
