@@ -323,7 +323,7 @@ export default function Onboarding() {
           </button>
 
           {step < STEPS.length - 1 ? (
-            <button type="button" className="btn" onClick={() => setStep((s) => s + 1)}>
+            <button type="button" className="btn" onClick={() => setStep((s) => s + 1)} disabled={loading}>
               Continue
             </button>
           ) : (
