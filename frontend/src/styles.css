@@ -1,11 +1,4 @@
-/* =====================================================================
-   IRON LEDGER — DESIGN SYSTEM
-   Every class name from the original file is preserved below, so no
-   .jsx file needs to change just to pick up this stylesheet. Where a
-   class relied on an undefined CSS variable (--accent, --card-bg,
-   --line, --text-main) it has been pointed at a real token instead —
-   see AUDIT.md for the full list of what changed and why.
-   ===================================================================== */
+
 
 :root {
   /* ---- Light theme surface + text ---- */
