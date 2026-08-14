@@ -70,8 +70,10 @@ export default function Onboarding() {
         food_allergies: form.food_allergies ? form.food_allergies.split(",").map((s) => s.trim()) : [],
       };
       await api.saveOnboarding(payload);
-      await api.generateWorkoutPlan().catch(() => { });
-      await api.generateDietPlan().catch(() => { });
+      await Promise.all([
+        api.generateWorkoutPlan().catch(() => {}),
+        api.generateDietPlan().catch(() => {}),
+      ]);
       navigate("/dashboard");
     } catch (err) {
       setError(err.message);

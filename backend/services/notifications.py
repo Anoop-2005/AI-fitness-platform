@@ -5,7 +5,7 @@ def _already_sent_today(db, user_id: str, notif_type: str) -> bool:
     with db.cursor() as cur:
         cur.execute("""
             SELECT id FROM notifications
-            WHERE user_id = %s AND type = %s AND created_at::date = CURRENT_DATE
+            WHERE user_id = %s AND type = %s AND notif_date = CURRENT_DATE
             LIMIT 1
         """, (user_id, notif_type))
         return cur.fetchone() is not None
@@ -71,9 +71,9 @@ def check_and_create_reminders(db, user_id: str) -> list:
     with db.cursor() as cur:
         for notif_type, title, message in to_create:
             cur.execute("""
-                INSERT INTO notifications (user_id, type, title, message)
-                VALUES (%s, %s, %s, %s)
-                ON CONFLICT (user_id, type, (created_at::date)) DO NOTHING
+                INSERT INTO notifications (user_id, type, title, message, notif_date)
+                VALUES (%s, %s, %s, %s, CURRENT_DATE)
+                ON CONFLICT (user_id, type, notif_date) DO NOTHING
                 RETURNING id, user_id, type, title, message, read, created_at
             """, (user_id, notif_type, title, message))
             row = cur.fetchone()
