@@ -113,5 +113,11 @@ export const api = {
   getBodyComposition: () => request("/api/body-composition/insights"),
   // Goal prediction
   getGoalPrediction: () => request("/api/goal/prediction"),
+  //notification
+  getNotifications: (unreadOnly) => request(`/api/notifications/${unreadOnly ? "?unread_only=true" : ""}`),
+  checkNotifications: () => request("/api/notifications/check", { method: "POST" }),
+  markNotificationRead: (notificationId) => request("/api/notifications/mark-read", { method: "POST", body: { notification_id: notificationId } }),
+  markAllNotificationsRead: () => request("/api/notifications/mark-all-read", { method: "POST" }),
+  getUnreadNotificationCount: () => request("/api/notifications/unread-count"),
 
 };

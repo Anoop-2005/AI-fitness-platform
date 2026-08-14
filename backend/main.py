@@ -3,7 +3,7 @@ from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from routers import onboarding, plans, habits, sync, coach, photos, admin, trainer, reports, goal, body_composition
+from routers import onboarding, plans, habits, sync, coach, photos, admin, trainer, reports, goal, body_composition, notifications
 from services.llm_client import MOCK_MODE
 
 app = FastAPI(title="Iron Ledger", version="1.0.0")
@@ -47,6 +47,7 @@ app.include_router(trainer.router)
 app.include_router(reports.router)
 app.include_router(body_composition.router)
 app.include_router(goal.router)
+app.include_router(notifications.router)
 
 
 @app.get("/health")

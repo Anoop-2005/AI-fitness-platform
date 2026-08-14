@@ -1029,3 +1029,53 @@ tbody tr:hover { background: var(--surface-hover); }
   .equipment-grid { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px; }
   .equipment-btn { flex-shrink: 0; }
 }
+
+/* ===== Notifications Dropdown ===== */
+.notif-wrapper {
+  position: relative;
+}
+
+.notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--danger);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 10px;
+  padding: 1px 5px;
+  line-height: 1.4;
+}
+
+.notif-dropdown {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  width: 300px;
+  max-height: 360px;
+  overflow-y: auto;
+  z-index: 50;
+}
+
+.notif-item {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.notif-item.unread {
+  cursor: pointer;
+}
+
+.notif-item.read {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.notif-title {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.notif-message {
+  font-size: 12px;
+}
