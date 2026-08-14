@@ -1,9 +1,3 @@
-"""
-Goal prediction service.
-Computes expected completion date, weekly/monthly projections, and goal achievement %.
-Uses deterministic math (no LLM ) based on the user's body_analysis timeline_weeks
-and actual habit log progress.
-"""
 from datetime import date, timedelta
 from services.profile_helpers import get_profile, get_latest_analysis
 

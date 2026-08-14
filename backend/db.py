@@ -1,11 +1,3 @@
-"""
-Database access. Kept intentionally simple: one Postgres connection per
-request (via FastAPI's dependency system), plain SQL with %s placeholders,
-rows returned as dicts so `row["column_name"]` works everywhere.
-
-For a bigger app you'd add a connection pool (psycopg_pool) — left out here
-on purpose to keep the code easy to follow.
-"""
 from decimal import Decimal
 import psycopg
 from psycopg.rows import dict_row

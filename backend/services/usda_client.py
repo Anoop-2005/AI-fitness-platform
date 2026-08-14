@@ -1,15 +1,4 @@
-"""
-Searches USDA FoodData Central and caches results into `foods_cache`.
-Free API key from https://fdc.nal.usda.gov/api-key-signup (DEMO_KEY works
-for trying things out, but is rate-limited to ~30 requests/hour).
-
-USDA's nutrient values are keyed by fixed numeric nutrient IDs (these are
-official USDA constants, not something we're inventing):
-  1008 = Energy (kcal), 1003 = Protein (g), 1004 = Fat (g),
-  1005 = Carbohydrate (g), 1079 = Fiber (g)
-"""
 import httpx
-
 from config import USDA_API_KEY
 
 USDA_BASE_URL = "https://api.nal.usda.gov/fdc/v1"

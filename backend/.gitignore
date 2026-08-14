@@ -52,7 +52,7 @@ MANIFEST
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
-
+.ruff_cache
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
@@ -134,6 +134,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+ruff-report.txt
+ruff-reportfix.txt
 
 # Spyder project settings
 .spyderproject

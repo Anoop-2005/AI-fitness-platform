@@ -1,11 +1,5 @@
-"""
-Weekly review as a 2-node LangGraph: aggregate (pure arithmetic) -> narrate
-(LLM writes a sentence about those exact numbers, nothing else).
-"""
 from typing import TypedDict
-
 from langgraph.graph import StateGraph, END
-
 from services.llm_client import chat, LLMUnavailableError
 
 
@@ -24,22 +18,6 @@ def detect_plateau(weight_series: list[float]) -> bool:
     return abs(end - start) / start < 0.003
 
 
-'''def aggregate_week(logs: list[dict]) -> dict:
-    if not logs:
-        return {}
-    n = len(logs)
-    weights = [l["weight_kg"] for l in logs if l.get("weight_kg")]
-    return {
-        "workout_completion_pct": round(sum(1 for l in logs if l["workout_done"]) / n * 100, 1),
-        "avg_water_l": round(sum(l["water_l"] for l in logs) / n, 2),
-        "avg_sleep_hours": round(sum(l["sleep_hours"] for l in logs) / n, 1),
-        "avg_steps": round(sum(l["steps"] for l in logs) / n),
-        "avg_calories_consumed": round(sum(l["calories_consumed"] for l in logs) / n),
-        "avg_protein_g": round(sum(l["protein_g"] for l in logs) / n, 1),
-        "weight_change_kg": round(weights[-1] - weights[0], 2) if len(weights) >= 2 else 0,
-        "plateau_detected": detect_plateau(weights) if weights else False,
-    }
-'''
 def aggregate_week(logs: list[dict]) -> dict:
     if not logs:
         return {}

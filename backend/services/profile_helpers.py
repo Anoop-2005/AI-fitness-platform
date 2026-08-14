@@ -1,7 +1,3 @@
-"""
-Shared database helpers used across routers and services.
-Moved here to avoid circular imports between routers/ and services/.
-"""
 from datetime import date, timedelta
 
 

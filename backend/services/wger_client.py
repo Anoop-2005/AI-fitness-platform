@@ -1,11 +1,3 @@
-"""
-Pulls exercises from wger's public API (https://wger.de/api/v2/) into our
-own `exercises_cache` table. wger needs no API key for read access.
-
-wger's data model: each exercise has a base `id`, plus a `translations`
-list (one entry per language) holding the actual name/description. We only
-keep the English translation (language id 2).
-"""
 import httpx
 
 WGER_BASE_URL = "https://wger.de/api/v2"
