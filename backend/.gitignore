@@ -154,7 +154,7 @@ docs/
 
 # Pyre type checker
 .pyre/
-
+ruff-report.txt
 # pytype static type analyzer
 .pytype/
 
