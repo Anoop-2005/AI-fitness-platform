@@ -124,10 +124,10 @@ export default function Diet() {
                 <div className="macro-label">Fat</div>
                 <div className="macro-value">{Math.round(selectedMeal.fat_g)}g</div>
               </div>
-              <div>
+              {/*<div>
                 <div className="macro-label">Fiber</div>
                 <div className="macro-value">{Math.round(selectedMeal.fiber_g || 0)}g</div>
-              </div>
+              </div>*/}
             </div>
 
             {/* Serving Size & Cooking Time */}
