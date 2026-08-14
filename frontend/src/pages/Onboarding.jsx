@@ -60,7 +60,8 @@ export default function Onboarding() {
   }
 
   async function handleFinish(e) {
-    e.preventDefault();
+    if (loading) return;
+    if (e) e.preventDefault();
     setError("");
     setLoading(true);
     try {
@@ -100,7 +101,7 @@ export default function Onboarding() {
 
       {error && <div className="error-banner">{error}</div>}
 
-      <form onSubmit={handleFinish} className="card">
+      <div className="card">
         {step === 0 && (
           <>
              <h3 className="personal-title">Personal information</h3>
@@ -172,7 +173,7 @@ export default function Onboarding() {
           <>
              <h3 className="health-title">Health assessment</h3>
              <p className="info-text-small">
-               We use this only to filter out unsafe exercises — never to diagnose.
+              We use this only to filter out unsafe exercises — never to diagnose.
              </p>
              <div className="stat-label stat-label-margin">Conditions & Habits</div>
             {[
@@ -310,7 +311,6 @@ export default function Onboarding() {
           </>
         )}
 
-        
         {/* Wizard Navigation */}
         <div className="wizard-nav">
           <button
@@ -327,12 +327,12 @@ export default function Onboarding() {
               Continue
             </button>
           ) : (
-            <button type="submit" className={`btn ${loading ? "cursor-not-allowed" : "cursor-pointer"}`} disabled={loading}>
+            <button type="button" className="btn cursor-pointer" disabled={loading} onClick={handleFinish}>
               {loading ? "Building your plan…" : "Generate my plan"}
             </button>
           )}
         </div>
-      </form>
+      </div>
     </div>
   );
 }
