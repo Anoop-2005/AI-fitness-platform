@@ -453,7 +453,7 @@ export default function TrainerDashboard() {
         api.trainerGetMessages(client.user_id).catch(() => []),
         api.trainerGetClientProgress(client.user_id).catch(() => []),
       ]);
-      setClientData({ profile, workout, diet, analysis, messages });
+      setClientData({ profile, workout, diet, analysis, messages, progress });
     } catch (err) {
       setError(err.message);
     } finally {
