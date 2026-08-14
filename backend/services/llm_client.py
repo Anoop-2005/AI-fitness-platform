@@ -9,7 +9,7 @@ class LLMUnavailableError(Exception):
 def _get_llm():
     if GROQ_API_KEY:
         from langchain_groq import ChatGroq
-        return ChatGroq(model="llama-3.1-8b-instant", api_key=GROQ_API_KEY, temperature=0.4)
+        return ChatGroq(model="openai/gpt-oss-20b", api_key=GROQ_API_KEY, temperature=0.4)
     if GOOGLE_API_KEY:
         from langchain_google_genai import ChatGoogleGenerativeAI
         return ChatGoogleGenerativeAI(model="gemini-3.5-flash", google_api_key=GOOGLE_API_KEY, temperature=0.4)
