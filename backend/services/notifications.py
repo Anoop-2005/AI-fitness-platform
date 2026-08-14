@@ -73,8 +73,11 @@ def check_and_create_reminders(db, user_id: str) -> list:
             cur.execute("""
                 INSERT INTO notifications (user_id, type, title, message)
                 VALUES (%s, %s, %s, %s)
+                ON CONFLICT (user_id, type, (created_at::date)) DO NOTHING
                 RETURNING id, user_id, type, title, message, read, created_at
             """, (user_id, notif_type, title, message))
-            created.append(cur.fetchone())
+            row = cur.fetchone()
+            if row:
+                created.append(row)
 
-    return created
+        return created
